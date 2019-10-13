@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29326.143
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlMapper", "SqlMapper\SqlMapper.csproj", "{CAB3ABE8-DC84-4AA0-B33C-2FA3824D7A9C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "ConsoleApp\ConsoleApp.csproj", "{C934BD45-53AB-470D-8B34-CE0B56D0E77A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CAB3ABE8-DC84-4AA0-B33C-2FA3824D7A9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAB3ABE8-DC84-4AA0-B33C-2FA3824D7A9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAB3ABE8-DC84-4AA0-B33C-2FA3824D7A9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAB3ABE8-DC84-4AA0-B33C-2FA3824D7A9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C934BD45-53AB-470D-8B34-CE0B56D0E77A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C934BD45-53AB-470D-8B34-CE0B56D0E77A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C934BD45-53AB-470D-8B34-CE0B56D0E77A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C934BD45-53AB-470D-8B34-CE0B56D0E77A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {070BA7F3-F331-4B01-93AF-96AF50427112}
+	EndGlobalSection
+EndGlobal
