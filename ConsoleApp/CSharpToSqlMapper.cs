@@ -59,9 +59,27 @@ namespace ConsoleApp
                     table.Constraints.Add(new NotNullConstraint(table, $"nn_{table.SqlName}_{column.Name}", column) { Tag = tag });
                 }
 
-                if (prop.GetCustomAttribute<PrimaryKeyAttribute>(true) != null)
+                var primaryKeyAttribute = prop.GetCustomAttribute<PrimaryKeyAttribute>(true);
+                if (primaryKeyAttribute != null)
                 {
                     primaryKey.Columns.Add(column);
+                    if (primaryKeyAttribute.DatabaseGenerated)
+                    {
+                        var sequence = new Sequence($"seq_{table.SqlName}") { Tag = tag };
+                        Schema.Add(sequence);
+                        var trigger = new Trigger($"trigger_{table.SqlName}")
+                        {
+                            Tag = tag,
+                            SqlCode = $"    BEFORE INSERT ON {table.SqlName}\n" +
+                                      $"    FOR EACH ROW\n" +
+                                      $"BEGIN\n" +
+                                      $"    IF :NEW.{column.Name} IS NULL THEN\n" +
+                                      $"        SELECT {sequence.SqlName}.NEXTVAL INTO :NEW.{column.Name} FROM SYS.DUAL;\n" +
+                                      $"    END IF;\n" +
+                                      $"END;"
+                        };
+                        Schema.Add(trigger);
+                    }
                 }
 
                 // TODO: Check, Unique, Default Value
@@ -161,6 +179,10 @@ namespace ConsoleApp
         public string ToStringAlter(string tag)
         {
             return Schema.ToStringAlterWithTag(tag);
+        }
+        public string ToStringTriggersAndSequences(string tag)
+        {
+            return Schema.ToStringSequencesWithTag(tag) + "\n" + Schema.ToStringTriggersWithTag(tag);
         }
 
         public override string ToString()

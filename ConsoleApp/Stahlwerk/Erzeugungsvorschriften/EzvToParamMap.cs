@@ -5,12 +5,13 @@ using SqlMapper.Attributes;
 
 namespace ConsoleApp.Stahlwerk.Erzeugungsvorschriften
 {
-    // TODO: Do I need a primary key here as well?
     [Comment("Assoziative Tabelle zwischen Erzeugungsvorschriften und deren Parameter.")]
     public class EzvToParamMap
     {
+        [PrimaryKey(databaseGenerated: false)]
         public Ezv Ezv { get; set; }
 
+        [PrimaryKey(databaseGenerated: false)]
         public EzvParam EzvParam { get; set; }
 
         [Comment("Obergrenze, also ein nicht idealer, aber akzeptabler Wert")]

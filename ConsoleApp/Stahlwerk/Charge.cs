@@ -21,11 +21,17 @@ namespace ConsoleApp.Stahlwerk
         [Comment("Um wie viel das vorhergesagte/eigentliche Gewicht abweicht")]
         public float GewichtAbweichung { get; set; }
 
-        // TODO: Don't we need an associative table or something here? 
-        // TODO: Previously I just had Ezv here, which can't be right, can it?
-        public EzvGruppe EzvGruppe { get; set; }
+        [Comment("Die Ezv der Charge, z.B. Auto-Audi")]
+        public Ezv Ezv { get; set; }
 
         [Comment("Mit welchem Format wird diese Charge gemacht")]
         public KokilleFormat KokilleFormat { get; set; }
     }
+
+    /* TODO: A ChargeLog Table which tells you where a charge currently is might be useful
+     * KokilleTimestamp
+     * PfanneTimestamp
+     * StrangTimest...
+     * 
+     */
 }

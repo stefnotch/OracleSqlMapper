@@ -7,9 +7,11 @@ namespace SqlMapper.Attributes
     [System.AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
     public sealed class PrimaryKeyAttribute : Attribute
     {
-        public PrimaryKeyAttribute()
-        {
+        public readonly bool DatabaseGenerated;
 
+        public PrimaryKeyAttribute(bool databaseGenerated = true)
+        {
+            DatabaseGenerated = databaseGenerated;
         }
     }
 }

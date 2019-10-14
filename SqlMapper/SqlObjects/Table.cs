@@ -78,7 +78,5 @@ END;
 
             return sqlCode;
         }
-
-        // TODO: Autogenerate Primary Keys? (Trigger, Sequence)
     }
 }

@@ -55,28 +55,35 @@ namespace SqlMapper
 
         public string ToStringDropWithTag(string tag)
         {
-            StringBuilder sqlCode = new StringBuilder();
-            var tables = DatabaseObjects.OfType<Table>().Where(t => t.Tag == tag).ToList();
-            if (tables.Count == 0) return "";
-            ToStringDrop(sqlCode, tables);
-            return sqlCode.ToString();
+            return ToStringTypeWithTag<Table>(tag, ToStringDrop);
         }
 
         public string ToStringCreateWithTag(string tag)
         {
-            StringBuilder sqlCode = new StringBuilder();
-            var tables = DatabaseObjects.OfType<Table>().Where(t => t.Tag == tag).ToList();
-            if (tables.Count == 0) return "";
-            ToStringCreate(sqlCode, tables);
-            return sqlCode.ToString();
+            return ToStringTypeWithTag<Table>(tag, ToStringCreate);
         }
 
         public string ToStringAlterWithTag(string tag)
         {
+            return ToStringTypeWithTag<Table>(tag, ToStringAlter);
+        }
+
+        public string ToStringSequencesWithTag(string tag)
+        {
+            return ToStringTypeWithTag<Sequence>(tag, ToStringSequences);
+        }
+
+        public string ToStringTriggersWithTag(string tag)
+        {
+            return ToStringTypeWithTag<Trigger>(tag, ToStringTriggers);
+        }
+
+        private string ToStringTypeWithTag<T>(string tag, Action<StringBuilder, List<T>> toStringAction) where T : DatabaseObject
+        {
             StringBuilder sqlCode = new StringBuilder();
-            var tables = DatabaseObjects.OfType<Table>().Where(t => t.Tag == tag).ToList();
-            if (tables.Count == 0) return "";
-            ToStringAlter(sqlCode, tables);
+            var databaseObjects = DatabaseObjects.OfType<T>().Where(t => t.Tag == tag).ToList();
+            if (databaseObjects.Count == 0) return "";
+            toStringAction(sqlCode, databaseObjects);
             return sqlCode.ToString();
         }
 
@@ -88,6 +95,8 @@ namespace SqlMapper
             ToStringDrop(sqlCode, tables);
             ToStringCreate(sqlCode, tables);
             ToStringAlter(sqlCode, tables);
+            ToStringSequences(sqlCode, DatabaseObjects.OfType<Sequence>().ToList());
+            ToStringTriggers(sqlCode, DatabaseObjects.OfType<Trigger>().ToList());
             return sqlCode.ToString();
         }
 
@@ -130,6 +139,47 @@ BEGIN
             foreach (var table in tables)
             {
                 sqlCode.Append(table.ToStringAlter());
+                sqlCode.Append("\n");
+            }
+        }
+
+        private static void ToStringSequences(StringBuilder sqlCode, List<Sequence> sequences)
+        {
+            sqlCode.Append(@"DECLARE
+    PROCEDURE SAFE_DROP_SEQ (p_seq_name varchar2) as
+    BEGIN
+       EXECUTE IMMEDIATE 'DROP SEQUENCE ' || p_seq_name;
+       DBMS_OUTPUT.PUT_LINE('Sequence ' || p_seq_name || ' dropped.');
+    EXCEPTION
+       WHEN OTHERS THEN
+          IF SQLCODE != -2289 THEN
+             RAISE;
+          ELSE
+             DBMS_OUTPUT.PUT_LINE('Sequence ' || p_seq_name || ' skipped.');
+          END IF;
+    END;
+BEGIN
+");
+
+            foreach (var sequence in sequences)
+            {
+                sqlCode.Append($"    SAFE_DROP_SEQ('{sequence.SqlName}');");
+                sqlCode.Append("\n");
+            }
+            sqlCode.Append("END;\n/\n\n");
+
+            foreach (var sequence in sequences)
+            {
+                sqlCode.Append(sequence.ToStringCreate());
+                sqlCode.Append("\n");
+            }
+        }
+
+        private static void ToStringTriggers(StringBuilder sqlCode, List<Trigger> triggers)
+        {
+            foreach (var trigger in triggers)
+            {
+                sqlCode.Append(trigger.ToStringCreateOrReplace());
                 sqlCode.Append("\n");
             }
         }

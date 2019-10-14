@@ -8,10 +8,10 @@ namespace ConsoleApp.Stahlwerk.Anlagen
     [Comment("Welche Chargen sind gerade in dieser Anlage")]
     public abstract class ChargeToAnlageMap<T> where T : Anlage
     {
-        [PrimaryKey]
+        [PrimaryKey(databaseGenerated: false)]
         public T Anlage { get; set; }
 
-        [PrimaryKey]
+        [PrimaryKey(databaseGenerated: false)]
         public Charge Charge { get; set; }
 
         public DateTime StartZeit { get; set; }

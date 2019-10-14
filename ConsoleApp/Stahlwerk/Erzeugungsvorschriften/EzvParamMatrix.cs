@@ -5,7 +5,6 @@ using SqlMapper.Attributes;
 
 namespace ConsoleApp.Stahlwerk.Erzeugungsvorschriften
 {
-    // TODO: I don't actually need this, do I? I can just use EzvParamMatrixElement
     [Comment("Fuer Matrix-Parameter, welche fuer Kuehlzohnen verwendet werden.")]
     public class EzvParamMatrix
     {

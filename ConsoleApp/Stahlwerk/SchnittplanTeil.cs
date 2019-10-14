@@ -6,9 +6,7 @@ using SqlMapper.Attributes;
 namespace ConsoleApp.Stahlwerk
 {
 
-    // TODO: How does the Schnittplan stuff work, now that you also need: 
-    //    Planned Values, Constantly Changing Predicted Values and Actual Values??
-    // Defining the Schnittplan once doesn't really suffice anymore
+    // TODO: Alternatively, you could define the Schnittplan once and store the actual length in the Produkt table
     [Comment("Ein Teil eines Schnittplan, gibt an wie viele Stueck mit welcher Laenge produziert werden")]
     public class SchnittplanTeil
     {
