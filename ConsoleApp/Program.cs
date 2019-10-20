@@ -77,16 +77,79 @@ namespace ConsoleApp
 
         private static void AddInserts(CSharpToSqlMapper mapper)
         {
-            var ezvGroups = mapper.InsertsFor<EzvGruppe>()
+            var ezvGruppen = mapper.InsertsFor<EzvGruppe>()
                 .Set(e => e.Id, Count())
-                .Set(e => e.Name, Join(Value("Gruppe "), SequentialFrom("Autoblech", "Flugzeugblech", "Schiffsblech")))
+                .Set(e => e.Name, Join(Value("Gruppe "), SequentialFrom("Auto", "Flugzeug", "Bau")))
                 .Generate(3);
 
             var ezvs = mapper.InsertsFor<Ezv>()
                 .Set(e => e.Id, Count())
-                .Set(e => e.EzvGruppe, RepeatEach(SequentialFrom(ezvGroups), 10))
-                .Set(e => e.Name, Value("Test"))
-                .Generate(10 * ezvGroups.Count);
+                .Set(e => e.EzvGruppe, RepeatEach(SequentialFrom(ezvGruppen), 4))
+                .Set(e => e.Name, SequentialFrom("Grobblech", "Stahl", "Feinblech", "Weissblech"))
+                .Generate(4 * ezvGruppen.Count);
+
+            // TODO: EzvParam
+
+            int anlagenAnzahl = 3;
+            var anlagenOrte = RandomFrom("Nord", "Sued", "Ost", "West");
+            var pfannen = mapper.InsertsFor<Pfanne>()
+                .Set(e => e.Id, Count())
+                .Set(e => e.Name, Join(RandomFrom("Grosse", "Kleine", "Mittlere"), Value(" Pfanne"), Value(" "), anlagenOrte))
+                .Set(e => e.Text, Value("Eine Pfanne"))
+                .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
+                .Set(e => e.Lebensalter, Random(50))
+                .Set(e => e.Gewicht, Random(20, 50))
+                .Generate(anlagenAnzahl);
+
+            var verteiler = mapper.InsertsFor<Verteiler>()
+                .Set(e => e.Id, Count())
+                .Set(e => e.Name, Join(RandomFrom("Grosser", "Kleiner", "Mittlerer"), Value(" Verteiler"), Value(" "), anlagenOrte))
+                .Set(e => e.Text, Value("Ein Verteiler"))
+                .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
+                .Set(e => e.Lebensalter, Random(50))
+                .Set(e => e.Gewicht, Random(70, 100))
+                .Generate(anlagenAnzahl);
+
+            var straenge = mapper.InsertsFor<Strang>()
+                .Set(e => e.Id, Count())
+                .Set(e => e.Name, Join(RandomFrom("Grosser", "Kleiner", "Mittlerer"), Value(" Strang"), Value(" "), anlagenOrte))
+                .Set(e => e.Text, Value("Ein Strang"))
+                .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
+                .Set(e => e.Lebensalter, Random(50))
+                .Set(e => e.Gewicht, Random(70, 100))
+                .Generate(anlagenAnzahl);
+
+            var kokillen = mapper.InsertsFor<Kokille>()
+                .Set(e => e.Id, Count())
+                .Set(e => e.Name, Join(RandomFrom("Grosse", "Kleine", "Mittlere"), Value(" Kokille"), Value(" "), anlagenOrte))
+                .Set(e => e.Text, Value("Eine Kokille"))
+                .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
+                .Set(e => e.Lebensalter, Random(50))
+                .Set(e => e.Gewicht, Random(7, 15))
+                .Generate(anlagenAnzahl);
+
+            var kokillenFormate = mapper.InsertsFor<KokilleFormat>()
+                .Set(e => e.Id, Count())
+                .Set(e => e.Kokille, SequentialFrom(kokillen))
+                .Set(e => e.Breite, Random(90, 120))
+                .Set(e => e.Hoehe, Random(15, 30))
+                .Generate(kokillen.Count);
+
+            var chargen = mapper.InsertsFor<Charge>()
+                .Set(e => e.Id, Count())
+                .Set(e => e.Name, Join(Value("Charge "), Count()))
+                .Set(e => e.PlanGewicht, Random(70, 140))
+                .Set(e => e.GewichtAbweichung, Random(-15, 15)) // TODO: More often than not, it's simply 0. So, implement an IF(RANDOM()) {} ? Or SWITCH?
+                .Set(e => e.Ezv, RandomFrom(ezvs))
+                .Set(e => e.KokilleFormat, RandomFrom(kokillenFormate))
+                .Generate(20);
+
+            // TODO: https://docs.microsoft.com/en-us/dotnet/api/system.linq.expressions.expressiontype?view=netframework-4.8
+            // TODO: Chargen
+            // TODO: Schnittplan usw
+            // TODO: Produkte
+            // TODO: Warenkorb
+
         }
 
         private static void OutputSqlFiles(string path, CSharpToSqlMapper mapper, int outputIndex, string tag)
@@ -99,7 +162,7 @@ namespace ConsoleApp
 
         public static void OutputText(string path, string fileName, string content)
         {
-            bool outputToFile = false;
+            bool outputToFile = true;
             string filePath = Path.Combine(path, fileName);
             if (outputToFile)
             {

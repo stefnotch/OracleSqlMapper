@@ -221,7 +221,7 @@ namespace ConsoleApp
             return Schema.ToString();
         }
 
-        public class InsertStatementGenerator<T> : IEnumerable<int> where T : class
+        public class InsertStatementGenerator<T> : IReadOnlyList<int> where T : class
         {
             private readonly CSharpToSqlMapper _mapper;
             private readonly TableMapping _tableMapping;
@@ -229,7 +229,21 @@ namespace ConsoleApp
 
             public int Count => _tableMapping.Table.InsertsCount;
 
-            public int this[int index] => throw new NotImplementedException(); // TODO: (For Foreign Keys)
+            public int this[int index]
+            {
+                get
+                {
+                    // For Foreign Keys
+                    if (_primaryKeyGenerator.Value is IIndexedGenerator<int> indexedGenerator)
+                    {
+                        return indexedGenerator[index];
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+            }
 
             public InsertStatementGenerator(CSharpToSqlMapper mapper)
             {

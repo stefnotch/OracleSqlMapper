@@ -4,7 +4,7 @@ namespace DataGenerator
 {
     public class SequentialFromGenerator<T> : IGenerator<T>
     {
-        private IEnumerable<T> _enumerable;
+        private readonly IEnumerable<T> _enumerable;
 
         public SequentialFromGenerator(IEnumerable<T> enumerable)
         {
@@ -15,7 +15,11 @@ namespace DataGenerator
             var enumerator = _enumerable.GetEnumerator();
             while (true)
             {
-                enumerator.MoveNext();
+                if (!enumerator.MoveNext())
+                {
+                    enumerator = _enumerable.GetEnumerator();
+                    enumerator.MoveNext();
+                }
                 yield return enumerator.Current;
             }
         }

@@ -4,8 +4,8 @@ namespace DataGenerator
 {
     public class RepeatGenerator<T> : IGenerator<T>
     {
-        private IGenerator<T> _generator;
-        private int _repeatEachElementCount;
+        private readonly IGenerator<T> _generator;
+        private readonly int _repeatEachElementCount;
 
         public RepeatGenerator(IGenerator<T> generator, int repeatEachElementCount)
         {
@@ -16,7 +16,7 @@ namespace DataGenerator
         public IEnumerator<T> GetEnumerator()
         {
             var enumerator = _generator.GetEnumerator();
-            int repeatCounter = 0;
+            int repeatCounter = _repeatEachElementCount;
             while (true)
             {
                 repeatCounter++;
