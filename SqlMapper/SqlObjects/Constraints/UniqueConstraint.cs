@@ -23,7 +23,7 @@ namespace SqlMapper.SqlObjects.Constraints
         public override string ToString()
         {
             return base.ToString() +
-               (IsInlineSingleColumn ? "UNIQUE" : $"UNIQUE ({string.Join(", ", Columns.Select(c => c.Name))})");
+               (IsInlineSingleColumn ? "UNIQUE" : $"UNIQUE ({string.Join(", ", Columns.Select(c => c.SqlName))})");
         }
     }
 }

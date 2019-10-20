@@ -78,6 +78,11 @@ namespace SqlMapper
             return ToStringTypeWithTag<Trigger>(tag, ToStringTriggers);
         }
 
+        public string ToStringInsertsWithTag(string tag)
+        {
+            return ToStringTypeWithTag<Table>(tag, ToStringInserts);
+        }
+
         private string ToStringTypeWithTag<T>(string tag, Action<StringBuilder, List<T>> toStringAction) where T : DatabaseObject
         {
             StringBuilder sqlCode = new StringBuilder();
@@ -180,6 +185,17 @@ BEGIN
             foreach (var trigger in triggers)
             {
                 sqlCode.Append(trigger.ToStringCreateOrReplace());
+                sqlCode.Append("\n");
+            }
+        }
+
+        private static void ToStringInserts(StringBuilder sqlCode, List<Table> tables)
+        {
+            //if(table.InsertsCount > someNumber) // TODO: Generate PL/SQL Code
+
+            foreach (var table in tables)
+            {
+                sqlCode.Append(table.ToStringInsert());
                 sqlCode.Append("\n");
             }
         }

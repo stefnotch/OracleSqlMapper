@@ -26,7 +26,7 @@ namespace SqlMapper.SqlObjects.Constraints
         public override string ToString()
         {
             return base.ToString() +
-                (IsInlineSingleColumn ? "PRIMARY KEY" : $"PRIMARY KEY ({string.Join(", ", Columns.Select(c => c.Name))})");
+                (IsInlineSingleColumn ? "PRIMARY KEY" : $"PRIMARY KEY ({string.Join(", ", Columns.Select(c => c.SqlName))})");
         }
     }
 }

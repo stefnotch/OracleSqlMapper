@@ -33,8 +33,8 @@ namespace SqlMapper.SqlObjects.Constraints
             }
 
             return base.ToString() +
-                (IsInlineSingleColumn ? "" : $"FOREIGN KEY ({string.Join(", ", Columns.Select(c => c.Name))}) ") +
-                $"REFERENCES {ReferencedColumns[0].Table.SqlName}({string.Join(", ", ReferencedColumns.Select(c => c.Name))})";
+                (IsInlineSingleColumn ? "" : $"FOREIGN KEY ({string.Join(", ", Columns.Select(c => c.SqlName))}) ") +
+                $"REFERENCES {ReferencedColumns[0].Table.SqlName}({string.Join(", ", ReferencedColumns.Select(c => c.SqlName))})";
         }
     }
 }

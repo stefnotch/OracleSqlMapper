@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlMapper", "SqlMapper\SqlM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "ConsoleApp\ConsoleApp.csproj", "{C934BD45-53AB-470D-8B34-CE0B56D0E77A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataGenerator", "DataGenerator\DataGenerator.csproj", "{6F364E31-C2BC-44CB-A6A8-EA683A39C32B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C934BD45-53AB-470D-8B34-CE0B56D0E77A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C934BD45-53AB-470D-8B34-CE0B56D0E77A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C934BD45-53AB-470D-8B34-CE0B56D0E77A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6F364E31-C2BC-44CB-A6A8-EA683A39C32B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F364E31-C2BC-44CB-A6A8-EA683A39C32B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F364E31-C2BC-44CB-A6A8-EA683A39C32B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F364E31-C2BC-44CB-A6A8-EA683A39C32B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

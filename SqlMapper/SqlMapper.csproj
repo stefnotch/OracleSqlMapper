@@ -4,4 +4,12 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="SqlInsert\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataGenerator\DataGenerator.csproj" />
+  </ItemGroup>
+
 </Project>

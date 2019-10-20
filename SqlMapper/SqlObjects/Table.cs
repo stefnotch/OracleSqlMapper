@@ -13,6 +13,7 @@ namespace SqlMapper.SqlObjects
     {
         public List<TableColumn> Columns { get; } = new List<TableColumn>();
         public List<Constraint> Constraints { get; } = new List<Constraint>();
+        public int InsertsCount { get; set; }
 
         public Table(string name) : base(name)
         {
@@ -55,7 +56,7 @@ END;
                 Columns
                     .Select(column =>
                         $"{column.GetSqlComment("    ")}\n" +
-                        $"    {column.Name} {column.Datatype.Name}" +
+                        $"    {column.SqlName} {column.Datatype.Name}" +
                         singleColumnConstraints
                             .Where(con => con.SingleAffectedColumn == column)
                             .Select(con => " " + con.ToString())
@@ -74,6 +75,33 @@ END;
                 if (constraint.IsInline) continue;
 
                 sqlCode += $"ALTER TABLE {SqlName} ADD {constraint.ToString()};\n";
+            }
+
+            return sqlCode;
+        }
+
+        public string ToStringInsert()
+        {
+            string sqlColumnNames = Columns
+                    .Where(col => col.Generator != null)
+                    .Select(col => col.SqlName)
+                    .ToDelimitedString(", ");
+
+            var valueEnumerators = Columns
+                    .Where(col => col.Generator != null)
+                    .Select(col => SqlUtils.GeneratorToEnumerable(col.Generator).GetEnumerator())
+                    .ToList();
+
+            string insertSqlCode = $"INSERT INTO {SqlName} ({sqlColumnNames}) VALUES ";
+
+            string sqlCode = "";
+            for (int i = 0; i < InsertsCount; i++)
+            {
+                string insertValues = valueEnumerators
+                    .Select(v => { v.MoveNext(); return v.Current; })
+                    .ToDelimitedString(", ");
+
+                sqlCode += $"{insertSqlCode} ({insertValues});\n";
             }
 
             return sqlCode;
