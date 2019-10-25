@@ -23,11 +23,11 @@ namespace ConsoleApp
                 Type = type;
                 Table = table;
             }
-
+            public bool DatabaseGenerated { get; set; }
+            public Sequence PrimaryKeySequence { get; set; }
             public Type Type { get; }
             public Table Table { get; }
             public Dictionary<string, TableColumn> Columns { get; } = new Dictionary<string, TableColumn>();
-            public List<object> InsertStatementGenerators { get; } = new List<object>();
         }
 
 
@@ -86,7 +86,9 @@ namespace ConsoleApp
                     primaryKey.Columns.Add(column);
                     if (primaryKeyAttribute.DatabaseGenerated)
                     {
+                        tableMapping.DatabaseGenerated = true;
                         var sequence = new Sequence($"seq_{table.SqlName}") { Tag = tag };
+                        tableMapping.PrimaryKeySequence = sequence;
                         Schema.Add(sequence);
                         var trigger = new Trigger($"trigger_{table.SqlName}")
                         {
@@ -192,9 +194,9 @@ namespace ConsoleApp
 
         }
 
-        public InsertStatementGenerator<T> InsertsFor<T>() where T : class
+        public InsertStatementGenerator<T> InsertsFor<T>(int count) where T : class
         {
-            return new InsertStatementGenerator<T>(this);
+            return new InsertStatementGenerator<T>(this, count);
         }
 
         public string ToStringCreateOrReplace(string tag)
@@ -225,16 +227,17 @@ namespace ConsoleApp
         {
             private readonly CSharpToSqlMapper _mapper;
             private readonly TableMapping _tableMapping;
-            private readonly Lazy<IGenerator<int>> _primaryKeyGenerator;
+            private readonly TableGeneratorInsert _insertStatements;
+            private readonly IGenerator<int> _primaryKeyGenerator;
 
-            public int Count => _tableMapping.Table.InsertsCount;
+            public int Count => _insertStatements.InsertCount;
 
             public int this[int index]
             {
                 get
                 {
                     // For Foreign Keys
-                    if (_primaryKeyGenerator.Value is IIndexedGenerator<int> indexedGenerator)
+                    if (_primaryKeyGenerator is IIndexedGenerator<int> indexedGenerator)
                     {
                         return indexedGenerator[index];
                     }
@@ -245,34 +248,33 @@ namespace ConsoleApp
                 }
             }
 
-            public InsertStatementGenerator(CSharpToSqlMapper mapper)
+            public InsertStatementGenerator(CSharpToSqlMapper mapper, int count)
             {
                 _mapper = mapper;
                 _tableMapping = _mapper._tableMappings[typeof(T)];
-                _tableMapping.InsertStatementGenerators.Add(this);
+                _insertStatements = new TableGeneratorInsert(_tableMapping.Table);
 
-                _primaryKeyGenerator = new Lazy<IGenerator<int>>(() =>
+                if (_tableMapping.DatabaseGenerated)
                 {
-                    var generator = _tableMapping.Table
-                                        .Constraints
-                                        .OfType<PrimaryKeyConstraint>()
-                                        .Single()
-                                        .SingleAffectedColumn
-                                        .Generator;
-                    return (IGenerator<int>)generator;
-                });
+                    var primaryKeyColumn = _tableMapping.Table
+                                            .Constraints
+                                            .OfType<PrimaryKeyConstraint>()
+                                            .Single()
+                                            .SingleAffectedColumn;
+
+                    int startValue = _tableMapping.PrimaryKeySequence.StartWith ?? 0;
+                    _primaryKeyGenerator = DataGeneration.Count(startValue);
+                    _tableMapping.PrimaryKeySequence.StartWith = startValue + count;
+                    _insertStatements.Generators.Add(primaryKeyColumn, _primaryKeyGenerator);
+                }
+
+                _insertStatements.Generate(count);
             }
 
             public InsertStatementGenerator<T> Set<TValue>(Expression<Func<T, TValue>> getExpression, IGenerator generator)
             {
                 string memberName = GetMemberName(getExpression);
-                _tableMapping.Columns[memberName].Generator = generator;
-                return this;
-            }
-
-            public InsertStatementGenerator<T> Generate(int count)
-            {
-                _tableMapping.Table.InsertsCount = count;
+                _insertStatements.Generators.Add(_tableMapping.Columns[memberName], generator);
                 return this;
             }
 
@@ -289,7 +291,7 @@ namespace ConsoleApp
 
             public IEnumerator<int> GetEnumerator()
             {
-                var primaryKeys = _primaryKeyGenerator.Value.GetEnumerator();
+                var primaryKeys = _primaryKeyGenerator.GetEnumerator();
                 int count = Count;
                 for (int i = 0; i < count; i++)
                 {
