@@ -13,7 +13,6 @@ namespace SqlMapper.SqlObjects
         public readonly string Name;
         public readonly string SqlName;
         public readonly Datatype Datatype;
-        public IGenerator Generator;
 
         public TableColumn(Table table, string name, Datatype datatype)
         {
