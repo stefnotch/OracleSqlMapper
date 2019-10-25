@@ -6,7 +6,7 @@ using SqlMapper.Attributes;
 namespace ConsoleApp.Stahlwerk
 {
 
-    // TODO: Alternatively, you could define the Schnittplan once and store the actual length in the Produkt table
+    // TODO: Alternatively, you could define the Schnittplan once and store the actual length in a Produkt-Tracking-Table!
     [Comment("Ein Teil eines Schnittplan, gibt an wie viele Stueck mit welcher Laenge produziert werden")]
     public class SchnittplanTeil
     {
