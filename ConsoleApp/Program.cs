@@ -7,6 +7,7 @@ using ConsoleApp.Stahlwerk.Verkaufen;
 using static DataGenerator.DataGeneration;
 using SqlMapper;
 using SqlMapper.SqlObjects;
+using DataGenerator;
 
 namespace ConsoleApp
 {
@@ -91,7 +92,6 @@ namespace ConsoleApp
             int anlagenAnzahl = 3;
             var anlagenOrte = RandomFrom("Nord", "Sued", "Ost", "West");
             var pfannen = mapper.InsertsFor<Pfanne>(anlagenAnzahl)
-                .Set(e => e.Id, Count())
                 .Set(e => e.Name, Join(RandomFrom("Grosse", "Kleine", "Mittlere"), Value(" Pfanne"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Eine Pfanne"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
@@ -99,7 +99,6 @@ namespace ConsoleApp
                 .Set(e => e.Gewicht, Random(20, 50));
 
             var verteiler = mapper.InsertsFor<Verteiler>(anlagenAnzahl)
-                .Set(e => e.Id, Count())
                 .Set(e => e.Name, Join(RandomFrom("Grosser", "Kleiner", "Mittlerer"), Value(" Verteiler"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Ein Verteiler"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
@@ -107,7 +106,6 @@ namespace ConsoleApp
                 .Set(e => e.Gewicht, Random(70, 100));
 
             var straenge = mapper.InsertsFor<Strang>(anlagenAnzahl)
-                .Set(e => e.Id, Count())
                 .Set(e => e.Name, Join(RandomFrom("Grosser", "Kleiner", "Mittlerer"), Value(" Strang"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Ein Strang"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
@@ -115,7 +113,6 @@ namespace ConsoleApp
                 .Set(e => e.Gewicht, Random(70, 100));
 
             var kokillen = mapper.InsertsFor<Kokille>(anlagenAnzahl)
-                .Set(e => e.Id, Count())
                 .Set(e => e.Name, Join(RandomFrom("Grosse", "Kleine", "Mittlere"), Value(" Kokille"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Eine Kokille"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
@@ -123,17 +120,15 @@ namespace ConsoleApp
                 .Set(e => e.Gewicht, Random(7, 15));
 
             var kokillenFormate = mapper.InsertsFor<KokilleFormat>(kokillen.Count)
-                .Set(e => e.Id, Count())
                 .Set(e => e.Kokille, SequentialFrom(kokillen))
                 .Set(e => e.Breite, Random(90, 120))
                 .Set(e => e.Hoehe, Random(15, 30));
 
             // TODO: Execute those insert statements later
             var chargen = mapper.InsertsFor<Charge>(20)
-                .Set(e => e.Id, Count()) // Don't need this, autogen PK (if it's a single PK, otherwise it's an associative table)
                 .Set(e => e.Name, Join(Value("Charge "), Count()))
                 .Set(e => e.PlanGewicht, Random(70, 140))
-                .Set(e => e.GewichtAbweichung, Random(-15, 15)) // TODO: More often than not, it's simply 0. So, implement an IF(RANDOM()) {} ? Or SWITCH?
+                .Set(e => e.GewichtAbweichung, RandomFrom(new[] { Value(0), Random(-15, 15) }, new[] { 3, 1 }))
                 .Set(e => e.Ezv, RandomFrom(ezvs))
                 .Set(e => e.KokilleFormat, RandomFrom(kokillenFormate));
 

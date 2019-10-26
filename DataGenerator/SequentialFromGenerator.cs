@@ -1,26 +1,30 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace DataGenerator
 {
+    /// <summary>
+    /// Gets an element from each generator in sequential, cycling order
+    /// </summary>
     public class SequentialFromGenerator<T> : IGenerator<T>
     {
-        private readonly IEnumerable<T> _enumerable;
+        private readonly IGenerator<T>[] _generators;
 
-        public SequentialFromGenerator(IEnumerable<T> enumerable)
+        public SequentialFromGenerator(IGenerator<T>[] generators)
         {
-            _enumerable = enumerable;
+            _generators = generators;
         }
+
         public IEnumerator<T> GetEnumerator()
         {
-            var enumerator = _enumerable.GetEnumerator();
+            int index = 0;
+            var enumerators = _generators.Select(g => g.GetEnumerator()).ToList();
             while (true)
             {
-                if (!enumerator.MoveNext())
-                {
-                    enumerator = _enumerable.GetEnumerator();
-                    enumerator.MoveNext();
-                }
-                yield return enumerator.Current;
+                enumerators[index].MoveNext();
+                yield return enumerators[index].Current;
+
+                index = (index + 1) % _generators.Length;
             }
         }
     }
