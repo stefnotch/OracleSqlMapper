@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SqlMapper.SqlObjects
+namespace SqlMapper
 {
     public interface ICommentable
     {

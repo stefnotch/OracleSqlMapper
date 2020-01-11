@@ -13,7 +13,6 @@ namespace SqlMapper.SqlObjects
     {
         public List<TableColumn> Columns { get; } = new List<TableColumn>();
         public List<Constraint> Constraints { get; } = new List<Constraint>();
-        public List<TableInsert> Inserts { get; } = new List<TableInsert>();
 
         public Table(string name) : base(name)
         {
@@ -21,10 +20,10 @@ namespace SqlMapper.SqlObjects
 
         public override string ToString()
         {
-            return ToStringDrop() + "\n" + ToStringCreate() + "\n" + ToStringAlter();
+            return ToStringCreate(true) + "\n" + ToStringAlter();
         }
 
-        public string ToStringDrop()
+        public override string ToStringDrop()
         {
             string dropSafe = $@"BEGIN
    EXECUTE IMMEDIATE 'DROP TABLE {SqlName} CASCADE CONSTRAINTS';
@@ -40,7 +39,7 @@ END;
             return dropSafe;
         }
 
-        public string ToStringCreate()
+        public override string ToStringCreate(bool replace)
         {
             var singleColumnConstraints = Constraints
                             .Where(c => c.IsInline && c.SingleAffectedColumn != null)
@@ -51,11 +50,13 @@ END;
                             .Select(con => $"    {con.ToString()}")
                             .ToDelimitedString(",\n");
 
-            return $"{GetSqlComment("")}\n" +
+            return (replace ? ToStringDrop() + "\n" : "") +
+                $"{GetSqlComment("")}\n" +
                 $"CREATE TABLE {SqlName} (\n" +
                 Columns
                     .Select(column =>
                         $"{column.GetSqlComment("    ")}\n" +
+                        (string.IsNullOrEmpty(column.Datatype.Comment) ? "" : $"{column.Datatype.GetSqlComment("    ")}\n") +
                         $"    {column.SqlName} {column.Datatype.Name}" +
                         singleColumnConstraints
                             .Where(con => con.SingleAffectedColumn == column)
@@ -67,7 +68,7 @@ END;
                 $"\n);";
         }
 
-        public string ToStringAlter()
+        public override string ToStringAlter()
         {
             string sqlCode = "";
             foreach (var constraint in Constraints)
@@ -80,14 +81,9 @@ END;
             return sqlCode;
         }
 
-        public string ToStringInsert()
+        public override bool HasVariableWithName(string variableName)
         {
-            string sqlCode = "";
-            foreach (var insert in Inserts)
-            {
-                sqlCode += insert.ToString() + "\n";
-            }
-            return sqlCode;
+            return Columns.Any(col => col.SqlName == variableName);
         }
     }
 }

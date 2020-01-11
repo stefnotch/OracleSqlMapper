@@ -5,12 +5,12 @@ using SqlMapper.Attributes;
 
 namespace ConsoleApp.Stahlwerk.Erzeugungsvorschriften
 {
-    [Comment("Ein einzelnes Element eines Ezv Matrix-Parameter")]
+    [Comment("Fuer Matrix-Parameter, welche fuer Kuehlzohnen verwendet werden.")]
     public class EzvParamMatrixElement
     {
         [PrimaryKey]
         public int Id { get; set; }
-        public EzvParamMatrix EzvParamMatrix { get; set; }
+        public EzvParam EzvParam { get; set; }
 
         [Comment("Der Index von diesem Element in der Matrix")]
         public int MatrixIndex { get; set; }

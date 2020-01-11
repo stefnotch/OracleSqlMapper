@@ -12,15 +12,18 @@ namespace SqlMapper
     public class Schema
     {
         private readonly List<DatabaseObject> _databaseObjects = new List<DatabaseObject>();
+        private readonly List<DatabaseAction> _databaseActions = new List<DatabaseAction>();
         public string Name { get; set; }
         public IReadOnlyCollection<DatabaseObject> DatabaseObjects => _databaseObjects;
+        public IReadOnlyCollection<DatabaseAction> DatabaseActions => _databaseActions;
 
         public event Action OnInitialise;
 
-        public void Initialise()
+        public void Initialize()
         {
             OnInitialise?.Invoke();
         }
+
         public void Add(DatabaseObject databaseObject)
         {
             databaseObject.Schema = this;
@@ -43,6 +46,17 @@ namespace SqlMapper
             _databaseObjects.Add(databaseObject);
         }
 
+        public void Add(DatabaseAction databaseAction)
+        {
+            databaseAction.Schema = this;
+        }
+
+        internal void AddInternal(DatabaseAction databaseAction)
+        {
+            _databaseActions.Add(databaseAction);
+        }
+
+
         public void Remove(DatabaseObject databaseObject)
         {
             databaseObject.Schema = null;
@@ -53,44 +67,65 @@ namespace SqlMapper
             _databaseObjects.Remove(databaseObject);
         }
 
+        public void Remove(DatabaseAction databaseAction)
+        {
+            databaseAction.Schema = null;
+        }
+
+        internal void RemoveInternal(DatabaseAction databaseAction)
+        {
+            _databaseActions.Remove(databaseAction);
+        }
+
+
         public string ToStringDropWithTag(string tag)
         {
-            return ToStringTypeWithTag<Table>(tag, ToStringDrop);
+            return ToStringObjectsWithTag<Table>(tag, ToStringDrop);
         }
 
         public string ToStringCreateWithTag(string tag)
         {
-            return ToStringTypeWithTag<Table>(tag, ToStringCreate);
+            return ToStringObjectsWithTag<Table>(tag, ToStringCreate);
         }
 
         public string ToStringAlterWithTag(string tag)
         {
-            return ToStringTypeWithTag<Table>(tag, ToStringAlter);
+            return ToStringObjectsWithTag<Table>(tag, ToStringAlter);
         }
 
         public string ToStringSequencesWithTag(string tag)
         {
-            return ToStringTypeWithTag<Sequence>(tag, ToStringSequences);
+            return ToStringObjectsWithTag<Sequence>(tag, ToStringSequences);
         }
 
         public string ToStringTriggersWithTag(string tag)
         {
-            return ToStringTypeWithTag<Trigger>(tag, ToStringTriggers);
+            return ToStringObjectsWithTag<Trigger>(tag, ToStringTriggers);
         }
 
         public string ToStringInsertsWithTag(string tag)
         {
-            return ToStringTypeWithTag<Table>(tag, ToStringInserts);
+            return ToStringActionsWithTag<InsertAction>(tag, ToStringInserts);
         }
 
-        private string ToStringTypeWithTag<T>(string tag, Action<StringBuilder, List<T>> toStringAction) where T : DatabaseObject
+        private string ToStringObjectsWithTag<T>(string tag, Action<StringBuilder, List<T>> toStringObjects) where T : DatabaseObject
         {
             StringBuilder sqlCode = new StringBuilder();
             var databaseObjects = DatabaseObjects.OfType<T>().Where(t => t.Tag == tag).ToList();
             if (databaseObjects.Count == 0) return "";
-            toStringAction(sqlCode, databaseObjects);
+            toStringObjects(sqlCode, databaseObjects);
             return sqlCode.ToString();
         }
+
+        private string ToStringActionsWithTag<T>(string tag, Action<StringBuilder, List<T>> toStringActions) where T : DatabaseAction
+        {
+            StringBuilder sqlCode = new StringBuilder();
+            var databaseActionos = DatabaseActions.OfType<T>().Where(t => t.Tag == tag).ToList();
+            if (databaseActionos.Count == 0) return "";
+            toStringActions(sqlCode, databaseActionos);
+            return sqlCode.ToString();
+        }
+
 
         public override string ToString()
         {
@@ -134,7 +169,7 @@ BEGIN
         {
             foreach (var table in tables)
             {
-                sqlCode.Append(table.ToStringCreate());
+                sqlCode.Append(table.ToStringCreate(false));
                 sqlCode.Append("\n\n");
             }
         }
@@ -175,7 +210,7 @@ BEGIN
 
             foreach (var sequence in sequences)
             {
-                sqlCode.Append(sequence.ToStringCreate());
+                sqlCode.Append(sequence.ToStringCreate(false));
                 sqlCode.Append("\n");
             }
         }
@@ -184,19 +219,31 @@ BEGIN
         {
             foreach (var trigger in triggers)
             {
-                sqlCode.Append(trigger.ToStringCreateOrReplace());
+                sqlCode.Append(trigger.ToStringCreate(true));
                 sqlCode.Append("\n");
             }
         }
 
-        private static void ToStringInserts(StringBuilder sqlCode, List<Table> tables)
+        private static void ToStringInserts(StringBuilder sqlCode, List<InsertAction> inserts)
         {
-            //if(table.InsertsCount > someNumber) // TODO: Generate PL/SQL Code
-
-            foreach (var table in tables)
+            bool useBlockInsert = inserts.Sum(i => i.InsertCount) > 15;
+            if (useBlockInsert)
             {
-                sqlCode.Append(table.ToStringInsert());
+                sqlCode.Append("BEGIN\n");
+            }
+            foreach (var insert in inserts)
+            {
+                sqlCode.Append(insert.ToStringExecute());
                 sqlCode.Append("\n");
+            }
+            if (useBlockInsert)
+            {
+                sqlCode.Append("EXCEPTION\n");
+                sqlCode.Append("    WHEN OTHERS THEN\n");
+                sqlCode.Append("        DBMS_OUTPUT.PUT_LINE(SQLCODE || SQLERRM);\n");
+                sqlCode.Append("        RAISE;\n");
+                sqlCode.Append("END;\n");
+                sqlCode.Append("/\n");
             }
         }
     }

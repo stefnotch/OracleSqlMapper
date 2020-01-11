@@ -39,5 +39,20 @@ namespace SqlMapper.SqlObjects
         {
             return $"CONSTRAINT {SqlName} ";
         }
+
+        public override string ToStringCreate(bool replace)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToStringAlter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToStringDrop()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

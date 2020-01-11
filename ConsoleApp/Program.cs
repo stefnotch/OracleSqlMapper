@@ -8,6 +8,7 @@ using static DataGenerator.DataGeneration;
 using SqlMapper;
 using SqlMapper.SqlObjects;
 using DataGenerator;
+using CSharpToSqlMapper;
 
 namespace ConsoleApp
 {
@@ -25,37 +26,40 @@ namespace ConsoleApp
 
         public static void Main(string[] args)
         {
-            var mapper = new CSharpToSqlMapper();
+            //var plsqlMapper = new CSharpToPlsqlMapper();
+            //plsqlMapper.AddExpression<Func<int, int>>("cat", (x) => x + 1);
+            //plsqlMapper.AddExpression<Func<int, string>>("cat", (x) => $"{x}");
+            var mapper = new Mapper();
             mapper.Schema.Name = "if150185";
-            mapper.AddTable(typeof(Charge), StahlwerkTag);
-            mapper.AddTable(typeof(SchnittplanTeil), StahlwerkTag);
+            mapper.AddTable<Charge>(StahlwerkTag);
 
-            mapper.AddTable(typeof(EzvGruppe), EzvTag);
-            mapper.AddTable(typeof(Ezv), EzvTag);
-            mapper.AddTable(typeof(EzvParam), EzvTag);
-            mapper.AddTable(typeof(EzvToParamMap), EzvTag);
-            mapper.AddTable(typeof(EzvParamText), EzvTag);
-            mapper.AddTable(typeof(EzvParamMatrix), EzvTag);
-            mapper.AddTable(typeof(EzvParamMatrixElement), EzvTag);
+            mapper.AddTable<EzvGruppe>(EzvTag);
+            mapper.AddTable<Ezv>(EzvTag);
+            mapper.AddTable<EzvParam>(EzvTag);
+            mapper.AddTable<EzvToParamMap>(EzvTag);
+            mapper.AddTable<EzvParamText>(EzvTag);
+            mapper.AddTable<EzvParamMatrixElement>(EzvTag);
 
-            mapper.AddTable(typeof(Pfanne), AnlagenTag);
-            mapper.AddTable(typeof(Verteiler), AnlagenTag);
-            mapper.AddTable(typeof(Kokille), AnlagenTag);
-            mapper.AddTable(typeof(Strang), AnlagenTag);
-            mapper.AddTable(typeof(KokilleFormat), AnlagenTag);
-            mapper.AddTable(typeof(ChargeToPfanneMap), AnlagenTag);
-            mapper.AddTable(typeof(ChargeToVerteilerMap), AnlagenTag);
-            mapper.AddTable(typeof(ChargeToKokilleMap), AnlagenTag);
-            mapper.AddTable(typeof(ChargeToStrangMap), AnlagenTag);
+            mapper.AddTable<Pfanne>(AnlagenTag);
+            mapper.AddTable<Verteiler>(AnlagenTag);
+            mapper.AddTable<Kokille>(AnlagenTag);
+            mapper.AddTable<Strang>(AnlagenTag);
+            mapper.AddTable<KokilleFormat>(AnlagenTag);
+            mapper.AddTable<ChargeToPfanneMap>(AnlagenTag);
+            mapper.AddTable<ChargeToVerteilerMap>(AnlagenTag);
+            mapper.AddTable<ChargeToKokilleMap>(AnlagenTag);
+            mapper.AddTable<ChargeToStrangMap>(AnlagenTag);
 
-            mapper.AddTable(typeof(Produkt), VerkaufenTag);
-            mapper.AddTable(typeof(Warenkorb), VerkaufenTag);
-            mapper.AddTable(typeof(WarenkorbEintrag), VerkaufenTag);
-            mapper.AddTable(typeof(Bestellung), VerkaufenTag);
-            mapper.AddTable(typeof(Lieferung), VerkaufenTag);
-            mapper.AddTable(typeof(Lieferdienst), VerkaufenTag);
+            mapper.AddTable<Produkt>(VerkaufenTag);
+            mapper.AddTable<ProduktParam>(VerkaufenTag);
+            mapper.AddTable<ProduktSegmentParam>(VerkaufenTag);
+            mapper.AddTable<Warenkorb>(VerkaufenTag);
+            mapper.AddTable<WarenkorbEintrag>(VerkaufenTag);
+            mapper.AddTable<Bestellung>(VerkaufenTag);
+            mapper.AddTable<Lieferung>(VerkaufenTag);
+            mapper.AddTable<Lieferdienst>(VerkaufenTag);
 
-            mapper.Initialise();
+            mapper.Initialize();
 
             AddInserts(mapper);
 
@@ -76,72 +80,283 @@ namespace ConsoleApp
             OutputSqlFiles(path, mapper, outputIndex++, VerkaufenTag);
         }
 
-        private static void AddInserts(CSharpToSqlMapper mapper)
+        private static void AddInserts(Mapper mapper)
         {
-            var ezvGruppen = mapper.InsertsFor<EzvGruppe>(3)
-                .Set(e => e.Id, Count())
+            var ezvGruppen = mapper.InsertsFor<EzvGruppe>(3, EzvTag)
                 .Set(e => e.Name, Join(Value("Gruppe "), SequentialFrom("Auto", "Flugzeug", "Bau")));
 
-            var ezvs = mapper.InsertsFor<Ezv>(4 * ezvGruppen.Count)
-                .Set(e => e.Id, Count())
+            var ezvs = mapper.InsertsFor<Ezv>(4 * ezvGruppen.Count, EzvTag)
                 .Set(e => e.EzvGruppe, RepeatEach(SequentialFrom(ezvGruppen), 4))
                 .Set(e => e.Name, SequentialFrom("Grobblech", "Stahl", "Feinblech", "Weissblech"));
 
-            // TODO: EzvParam
+            {
+                var ezvParamsTemperatur = mapper.InsertsFor<EzvParam>(4, EzvTag)
+                    .Set(e => e.Name, Join(Value("Temperatur "), SequentialFrom("Pfanne", "Verteiler", "Strang", "Kokille")))
+                    .Set(e => e.MaxWert, Value(3000))
+                    .Set(e => e.StandardWert, Value(0))
+                    .Set(e => e.MinWert, Value(-100))
+                    .Set(e => e.Einheit, Value("Celsius"))
+                    .Set(e => e.MessQuelle, Value("Sensor"))
+                    .Set(e => e.MessAutomatisch, Value(true))
+                    .Set(e => e.MessBereich, SequentialFrom("Pfanne", "Verteiler", "Strang", "Kokille"))
+                    .Set(e => e.MessUnterBereich, Join(RandomFrom("Linke ", "Rechte "), Value("Seite")))
+                    .Set(e => e.IstAktiv, Value(true))
+                    .Set(e => e.ParamDatenTyp, Value(null as Enum))
+                    .Set(e => e.ParamTyp, Value(EzvParam.EzvParamTyp.Produktionsparameter));
+
+                var ezvParamsGeschwindigkeit = mapper.InsertsFor<EzvParam>(4, EzvTag)
+                    .Set(e => e.Name, Join(Value("Geschwindigkeit "), SequentialFrom("Pfanne", "Verteiler", "Strang", "Kokille")))
+                    .Set(e => e.MaxWert, Value(100))
+                    .Set(e => e.StandardWert, Value(0))
+                    .Set(e => e.MinWert, Value(0))
+                    .Set(e => e.Einheit, Value("km/h"))
+                    .Set(e => e.MessQuelle, Value("Sensor"))
+                    .Set(e => e.MessAutomatisch, Value(true))
+                    .Set(e => e.MessBereich, SequentialFrom("Pfanne", "Verteiler", "Strang", "Kokille"))
+                    .Set(e => e.MessUnterBereich, Join(RandomFrom("Linke ", "Rechte "), Value("Seite")))
+                    .Set(e => e.IstAktiv, Value(true))
+                    .Set(e => e.ParamDatenTyp, Value(null as Enum))
+                    .Set(e => e.ParamTyp, Value(EzvParam.EzvParamTyp.Produktionsparameter));
+
+                var ezvParamsTemperaturMap = mapper.InsertsFor<EzvToParamMap>(ezvs.Count * ezvParamsTemperatur.Count, EzvTag)
+                    .Set(e => e.Ezv, RepeatEach(SequentialFrom(ezvs), ezvParamsTemperatur.Count))
+                    .Set(e => e.EzvParam, SequentialFrom(ezvParamsTemperatur))
+                    .Set(e => e.MaxWert, Value(2500))
+                    .Set(e => e.ZielWert, Value(1500))
+                    .Set(e => e.MinWert, Value(800));
+
+                var ezvParamsGeschwindigkeitMap = mapper.InsertsFor<EzvToParamMap>(ezvs.Count * ezvParamsGeschwindigkeit.Count, EzvTag)
+                    .Set(e => e.Ezv, RepeatEach(SequentialFrom(ezvs), ezvParamsGeschwindigkeit.Count))
+                    .Set(e => e.EzvParam, SequentialFrom(ezvParamsGeschwindigkeit))
+                    .Set(e => e.MaxWert, Value(20))
+                    .Set(e => e.ZielWert, Value(10))
+                    .Set(e => e.MinWert, Value(5));
+            }
+
+            {
+                var ezvTextParams = mapper.InsertsFor<EzvParam>(1, EzvTag)
+                    .Set(e => e.Name, Value("Giesspulver Kokille"))
+                    .Set(e => e.MaxWert, Value(3))
+                    .Set(e => e.StandardWert, Value(2))
+                    .Set(e => e.MinWert, Value(1))
+                    .Set(e => e.Einheit, Value("Pulver Art"))
+                    .Set(e => e.MessQuelle, Value("Sensor"))
+                    .Set(e => e.MessAutomatisch, Value(true))
+                    .Set(e => e.MessBereich, Value("Kokille"))
+                    .Set(e => e.MessUnterBereich, Value("Linke Seite"))
+                    .Set(e => e.IstAktiv, Value(true))
+                    .Set(e => e.ParamDatenTyp, Value(EzvParam.DatenTyp.Text))
+                    .Set(e => e.ParamTyp, Value(EzvParam.EzvParamTyp.Produktionsparameter));
+
+                var ezvParamTexts = mapper.InsertsFor<EzvParamText>(ezvTextParams.Count * 3, EzvTag)
+                    .Set(e => e.EzvParam, SequentialFrom(ezvTextParams))
+                    .Set(e => e.TextWert, Count(1))
+                    .Set(e => e.Text, SequentialFrom("Rot", "Gelb", "Blau"));
+
+                var ezvTextParamsMap = mapper.InsertsFor<EzvToParamMap>(ezvs.Count * ezvTextParams.Count, EzvTag)
+                    .Set(e => e.Ezv, RepeatEach(SequentialFrom(ezvs), ezvTextParams.Count))
+                    .Set(e => e.EzvParam, SequentialFrom(ezvTextParams))
+                    .Set(e => e.MaxWert, Value(3))
+                    .Set(e => e.ZielWert, Value(2))
+                    .Set(e => e.MinWert, Value(1));
+            }
+
+            {
+                var ezvMatrixParams = mapper.InsertsFor<EzvParam>(1, EzvTag)
+                    .Set(e => e.Name, Value("Kuehlzohnen Wassermenge"))
+                    .Set(e => e.MaxWert, Value(10))
+                    .Set(e => e.StandardWert, Value(0))
+                    .Set(e => e.MinWert, Value(0))
+                    .Set(e => e.Einheit, Value("l/sec"))
+                    .Set(e => e.MessQuelle, Value("Sensor"))
+                    .Set(e => e.MessAutomatisch, Value(true))
+                    .Set(e => e.MessBereich, Value("Strang"))
+                    .Set(e => e.MessUnterBereich, Value(""))
+                    .Set(e => e.IstAktiv, Value(true))
+                    .Set(e => e.ParamDatenTyp, Value(EzvParam.DatenTyp.Matrix))
+                    .Set(e => e.ParamTyp, Value(EzvParam.EzvParamTyp.Produktionsparameter));
+
+                var ezvParamsMatrixElements = mapper.InsertsFor<EzvParamMatrixElement>(ezvMatrixParams.Count * 10, EzvTag)
+                    .Set(e => e.EzvParam, SequentialFrom(ezvMatrixParams))
+                    .Set(e => e.MatrixIndex, Count(1))
+                    .Set(e => e.Wert, Random(0.0, 10.0));
+
+                var ezvParamsMatrixMap = mapper.InsertsFor<EzvToParamMap>(ezvs.Count * ezvMatrixParams.Count, EzvTag)
+                    .Set(e => e.Ezv, RepeatEach(SequentialFrom(ezvs), ezvMatrixParams.Count))
+                    .Set(e => e.EzvParam, SequentialFrom(ezvMatrixParams))
+                    // TODO: What do I do here?
+                    .Set(e => e.MaxWert, Value(0))
+                    .Set(e => e.ZielWert, Value(0))
+                    .Set(e => e.MinWert, Value(0));
+            }
+
+            int segmentAnzahl = 10;
+            var ezvQualitaetsParams = mapper.InsertsFor<EzvParam>(3, EzvTag)
+                .Set(e => e.Name, Join(SequentialFrom("Laengen", "Quer", "Kanten"), Value("risse")))
+                .Set(e => e.MaxWert, Value(5))
+                .Set(e => e.StandardWert, Value(5))
+                .Set(e => e.MinWert, Value(1))
+                .Set(e => e.Einheit, Value("Sterne"))
+                .Set(e => e.MessQuelle, Value("Fachkraft"))
+                .Set(e => e.MessAutomatisch, Value(false))
+                .Set(e => e.MessBereich, Value("Strang"))
+                .Set(e => e.MessUnterBereich, Value(""))
+                .Set(e => e.IstAktiv, Value(true))
+                .Set(e => e.ParamDatenTyp, Value(EzvParam.DatenTyp.Matrix))
+                .Set(e => e.ParamTyp, Value(EzvParam.EzvParamTyp.Qualitaetsparameter));
+
+            var ezvQualitaetsParamsMatrixElements = mapper.InsertsFor<EzvParamMatrixElement>(ezvQualitaetsParams.Count * segmentAnzahl, EzvTag)
+                .Set(e => e.EzvParam, SequentialFrom(ezvQualitaetsParams))
+                .Set(e => e.MatrixIndex, Count(1))
+                .Set(e => e.Wert, Value(0));
+
+            var ezvQualitaetsParamsMap = mapper.InsertsFor<EzvToParamMap>(ezvs.Count * ezvQualitaetsParams.Count, EzvTag)
+                .Set(e => e.Ezv, RepeatEach(SequentialFrom(ezvs), ezvQualitaetsParams.Count))
+                .Set(e => e.EzvParam, SequentialFrom(ezvQualitaetsParams))
+                .Set(e => e.MaxWert, Value(5))
+                .Set(e => e.ZielWert, Value(5))
+                .Set(e => e.MinWert, Value(3));
+
 
             int anlagenAnzahl = 3;
+            int chargenProAnlage = 3;
             var anlagenOrte = RandomFrom("Nord", "Sued", "Ost", "West");
-            var pfannen = mapper.InsertsFor<Pfanne>(anlagenAnzahl)
+            var pfannen = mapper.InsertsFor<Pfanne>(anlagenAnzahl, AnlagenTag)
                 .Set(e => e.Name, Join(RandomFrom("Grosse", "Kleine", "Mittlere"), Value(" Pfanne"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Eine Pfanne"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
                 .Set(e => e.Lebensalter, Random(50))
                 .Set(e => e.Gewicht, Random(20, 50));
 
-            var verteiler = mapper.InsertsFor<Verteiler>(anlagenAnzahl)
+            var verteiler = mapper.InsertsFor<Verteiler>(anlagenAnzahl, AnlagenTag)
                 .Set(e => e.Name, Join(RandomFrom("Grosser", "Kleiner", "Mittlerer"), Value(" Verteiler"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Ein Verteiler"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
                 .Set(e => e.Lebensalter, Random(50))
                 .Set(e => e.Gewicht, Random(70, 100));
 
-            var straenge = mapper.InsertsFor<Strang>(anlagenAnzahl)
+            var straenge = mapper.InsertsFor<Strang>(anlagenAnzahl, AnlagenTag)
                 .Set(e => e.Name, Join(RandomFrom("Grosser", "Kleiner", "Mittlerer"), Value(" Strang"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Ein Strang"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
                 .Set(e => e.Lebensalter, Random(50))
                 .Set(e => e.Gewicht, Random(70, 100));
 
-            var kokillen = mapper.InsertsFor<Kokille>(anlagenAnzahl)
+            var kokillen = mapper.InsertsFor<Kokille>(anlagenAnzahl, AnlagenTag)
                 .Set(e => e.Name, Join(RandomFrom("Grosse", "Kleine", "Mittlere"), Value(" Kokille"), Value(" "), anlagenOrte))
                 .Set(e => e.Text, Value("Eine Kokille"))
                 .Set(e => e.Lebensdauer, Random(40, 70)) // TODO: Limit it to values like 45,50,55,60,...
                 .Set(e => e.Lebensalter, Random(50))
                 .Set(e => e.Gewicht, Random(7, 15));
 
-            var kokillenFormate = mapper.InsertsFor<KokilleFormat>(kokillen.Count)
+            var kokillenFormate = mapper.InsertsFor<KokilleFormat>(kokillen.Count, AnlagenTag)
                 .Set(e => e.Kokille, SequentialFrom(kokillen))
                 .Set(e => e.Breite, Random(90, 120))
                 .Set(e => e.Hoehe, Random(15, 30));
 
-            // TODO: Execute those insert statements later
-            var chargen = mapper.InsertsFor<Charge>(20)
+            var chargen = mapper.InsertsFor<Charge>(4 * anlagenAnzahl * chargenProAnlage, AnlagenTag)
                 .Set(e => e.Name, Join(Value("Charge "), Count()))
                 .Set(e => e.PlanGewicht, Random(70, 140))
-                .Set(e => e.GewichtAbweichung, RandomFrom(new[] { Value(0), Random(-15, 15) }, new[] { 3, 1 }))
+                .Set(e => e.GewichtAbweichung, RandomFrom(Value(0), Random(-15, 15)).WithWeights(3, 1))
                 .Set(e => e.Ezv, RandomFrom(ezvs))
                 .Set(e => e.KokilleFormat, RandomFrom(kokillenFormate));
 
-            // TODO: Ezv
-            // TODO: ChargeToAnlageMap 
-            // TODO: Schnittplan usw
-            // TODO: Produkte
-            // TODO: Warenkorb
-            // TODO: https://docs.microsoft.com/en-us/dotnet/api/system.linq.expressions.expressiontype?view=netframework-4.8
+            var fertigeChargen = mapper.InsertsFor<Charge>(10, AnlagenTag)
+                .Set(e => e.Name, Join(Value("Charge "), Count(chargen.Count)))
+                .Set(e => e.PlanGewicht, Random(70, 140))
+                .Set(e => e.GewichtAbweichung, RandomFrom(Value(0), Random(-15, 15)).WithWeights(3, 1))
+                .Set(e => e.Ezv, RandomFrom(ezvs))
+                .Set(e => e.KokilleFormat, RandomFrom(kokillenFormate));
 
+            {
+                var chargenSequence = SequentialFrom(chargen);
+                var chargenToPfanneMap = mapper.InsertsFor<ChargeToPfanneMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
+                    .Set(e => e.Charge, chargenSequence)
+                    .Set(e => e.Anlage, SequentialFrom(pfannen))
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
+
+                var chargenToVerteilerMap = mapper.InsertsFor<ChargeToVerteilerMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
+                    .Set(e => e.Charge, chargenSequence)
+                    .Set(e => e.Anlage, SequentialFrom(verteiler))
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
+
+                var chargenToStrangMap = mapper.InsertsFor<ChargeToStrangMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
+                    .Set(e => e.Charge, chargenSequence)
+                    .Set(e => e.Anlage, SequentialFrom(straenge))
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
+
+                var chargenToKokilleMap = mapper.InsertsFor<ChargeToKokilleMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
+                    .Set(e => e.Charge, chargenSequence)
+                    .Set(e => e.Anlage, SequentialFrom(kokillen))
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
+            }
+
+            var produktNameGenerator = RandomFrom(Join(
+                                                    RandomFrom("BMW", "Audi", "Opel", "Mercedes", "Volvo", "Ford"),
+                                                    Value(" "),
+                                                    RandomFrom("Motorhaube", "Stahlrahmen", "Traeger", "Blech")),
+                                             Join(
+                                                    RandomFrom("Dosen", "Schiffs", "Flugzeugs", "Waschmaschinen"),
+                                                    Value(" "),
+                                                    RandomFrom("Blech", "Stahlplatte", "Billigblech", "Blech"))
+                                                );
+
+            var produkte = mapper.InsertsFor<Produkt>(chargen.Count * 4, VerkaufenTag)
+                .Set(e => e.Charge, SequentialFrom(chargen))
+                .Set(e => e.Name, produktNameGenerator)
+                .Set(e => e.GeplanteLaenge, Random(10, 50))
+                .Set(e => e.LaengeAbweichung, Random(-2.0, 2.0));
+
+            var fertigeProdukte = mapper.InsertsFor<Produkt>(fertigeChargen.Count * 4, VerkaufenTag)
+                .Set(e => e.Charge, SequentialFrom(fertigeChargen))
+                .Set(e => e.Name, produktNameGenerator)
+                .Set(e => e.GeplanteLaenge, Random(10, 50))
+                .Set(e => e.LaengeAbweichung, Random(-4.0, 4.0))
+                .Set(e => e.ProduktionsZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now));
+
+            {
+                var produktParams = mapper.InsertsFor<ProduktParam>(fertigeProdukte.Count * ezvQualitaetsParams.Count, VerkaufenTag)
+                    .Set(e => e.Produkt, SequentialFrom(RepeatEach(SequentialFrom(fertigeProdukte), ezvQualitaetsParams.Count)))
+                    .Set(e => e.EzvParam, SequentialFrom(ezvQualitaetsParams))
+                    .Set(e => e.Wert, RandomFrom(Value(5), Random(1, 5)).WithWeights(2, 1)); // TODO: This should be a calculated value
+
+                var produktSegmentParams = mapper.InsertsFor<ProduktSegmentParam>(produktParams.Count * segmentAnzahl, VerkaufenTag)
+                    .Set(e => e.Segment, Count(1))
+                    .Set(e => e.ProduktParam, SequentialFrom(RepeatEach(SequentialFrom(produktParams), segmentAnzahl)))
+                    .Set(e => e.Wert, RandomFrom(Value(5), Random(1, 5)).WithWeights(2, 1));
+            }
+
+            // TODO: Charge (mass insert) (for now I'll just use the existing script)
+
+            {
+                var warenkoerbe = mapper.InsertsFor<Warenkorb>(4, VerkaufenTag)
+                    .Set(e => e.Name, SequentialFrom("John", "Adam", "Doe", "Eve"));
+
+                var warenkorbEintraege = mapper.InsertsFor<WarenkorbEintrag>(warenkoerbe.Count * 7, VerkaufenTag)
+                    .Set(e => e.Warenkorb, RandomFrom(warenkoerbe))
+                    .Set(e => e.Anzahl, Random(1, 100))
+                    // TODO: Rethink the produkt stuff. A produkt should probably only be a product-definition.
+                    // And then there should be a product-instance.
+                    .Set(e => e.Produkt, RandomFrom(RandomFrom(produkte), RandomFrom(fertigeProdukte)));
+
+                var lieferdienste = mapper.InsertsFor<Lieferdienst>(5, VerkaufenTag)
+                    .Set(e => e.Name, SequentialFrom("DHL", "Amazon Drone", "UPS", "Post", "Yodel"));
+
+                var lieferungen = mapper.InsertsFor<Lieferung>(15, VerkaufenTag)
+                    .Set(e => e.Lieferdienst, RandomFrom(lieferdienste))
+                    .Set(e => e.Status, RandomFrom("Fertig", "In Bearbeitung", "Verloren"))
+                    // TODO: Fertige lieferungen sollten logischerweise schon geliefert sein
+                    .Set(e => e.LieferDatum, Random(DateTime.Now, DateTime.Now.AddDays(100)));
+
+                var bestellungen = mapper.InsertsFor<Bestellung>(lieferungen.Count, VerkaufenTag)
+                    .Set(e => e.Warenkorb, RandomFrom(warenkoerbe))
+                    .Set(e => e.Anzahl, Random(1, 100))
+                    .Set(e => e.Produkt, RandomFrom(fertigeProdukte))
+                    .Set(e => e.Lieferung, SequentialFrom(lieferungen));
+            }
         }
 
-        private static void OutputSqlFiles(string path, CSharpToSqlMapper mapper, int outputIndex, string tag)
+        private static void OutputSqlFiles(string path, Mapper mapper, int outputIndex, string tag)
         {
             OutputText(path, $"{outputIndex}_1_Tables_{tag}.sql", mapper.ToStringCreateOrReplace(tag));
             OutputText(path, $"{outputIndex}_2_Constraints_{tag}.sql", mapper.ToStringAlter(tag));

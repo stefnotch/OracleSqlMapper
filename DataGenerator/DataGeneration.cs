@@ -7,24 +7,34 @@ namespace DataGenerator
     public static class DataGeneration
     {
         // Primitive generators
-        public static IGenerator<string> Value(string text)
+        public static IGenerator<string> Value(string value)
         {
-            return new ValueGenerator<string>(text);
+            return new ValueGenerator<string>(value);
         }
 
-        public static IGenerator<int> Value(int number)
+        public static IGenerator<int> Value(int value)
         {
-            return new ValueGenerator<int>(number);
+            return new ValueGenerator<int>(value);
         }
 
-        public static IGenerator<float> Value(float number)
+        public static IGenerator<float> Value(float value)
         {
-            return new ValueGenerator<float>(number);
+            return new ValueGenerator<float>(value);
         }
 
-        public static IGenerator<double> Value(double number)
+        public static IGenerator<double> Value(double value)
         {
-            return new ValueGenerator<double>(number);
+            return new ValueGenerator<double>(value);
+        }
+
+        public static IGenerator<bool> Value(bool value)
+        {
+            return new ValueGenerator<bool>(value);
+        }
+
+        public static IGenerator<Enum> Value(Enum value)
+        {
+            return new ValueGenerator<Enum>(value);
         }
 
         public static IGenerator<T>[] Values<T>(IReadOnlyList<T> values)
@@ -69,6 +79,10 @@ namespace DataGenerator
         {
             return new RandomDoubleGenerator(fromValue, toValue);
         }
+        public static IGenerator<DateTime> Random(DateTime fromValue, DateTime toValue)
+        {
+            return new RandomDateTimeGenerator(fromValue, toValue);
+        }
 
         // Intermediate Generators (Value generators that call higher order generators)
         // Just exist for convenience and the most common cases
@@ -93,14 +107,14 @@ namespace DataGenerator
         }
 
         // Higher order generators
-        public static IGenerator<T> SequentialFrom<T>(IGenerator<T>[] generators)
+        public static IGenerator<T> SequentialFrom<T>(params IGenerator<T>[] generators)
         {
             return new SequentialFromGenerator<T>(generators);
         }
 
-        public static IGenerator<T> RandomFrom<T>(IGenerator<T>[] generators, int[] weights = null)
+        public static RandomFromGenerator<T> RandomFrom<T>(params IGenerator<T>[] generators)
         {
-            return new RandomFromGenerator<T>(generators, weights);
+            return new RandomFromGenerator<T>(generators);
         }
 
         public static IGenerator<T> RepeatEach<T>(IGenerator<T> generator, int repeatEachElementCount)

@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CSharpToSqlMapper\CSharpToSqlMapper.csproj" />
     <ProjectReference Include="..\DataGenerator\DataGenerator.csproj" />
     <ProjectReference Include="..\SqlMapper\SqlMapper.csproj" />
   </ItemGroup>

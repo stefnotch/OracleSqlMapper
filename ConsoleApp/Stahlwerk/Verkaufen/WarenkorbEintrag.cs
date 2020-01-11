@@ -6,8 +6,7 @@ using SqlMapper.Attributes;
 namespace ConsoleApp.Stahlwerk.Verkaufen
 {
 
-    // TODO: Wie haengt das mit einer Bestellung zusammen? Werden die Sachen ruebergeschaufelt?
-    [Comment("Eine Produkt-Menge in einem Warenkorb")]
+    [Comment("Eine Produkt-Menge in einem Warenkorb. Wird in die Bestellung uebertragen")]
     public class WarenkorbEintrag
     {
         [PrimaryKey]

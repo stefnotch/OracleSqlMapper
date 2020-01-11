@@ -27,11 +27,4 @@ namespace ConsoleApp.Stahlwerk
         [Comment("Mit welchem Format wird diese Charge gemacht")]
         public KokilleFormat KokilleFormat { get; set; }
     }
-
-    /* TODO: A ChargeLog Table which tells you where a charge currently is might be useful
-     * KokilleTimestamp
-     * PfanneTimestamp
-     * StrangTimest...
-     * 
-     */
 }

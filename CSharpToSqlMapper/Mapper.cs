@@ -12,53 +12,59 @@ using SqlMapper.SqlObjects;
 using SqlMapper.SqlObjects.Constraints;
 using SqlMapper.SqlPrimitives;
 
-namespace ConsoleApp
+namespace CSharpToSqlMapper
 {
-    public class CSharpToSqlMapper
+    public class Mapper
     {
-        protected class TableMapping
-        {
-            public TableMapping(Type type, Table table)
-            {
-                Type = type;
-                Table = table;
-            }
-            public bool DatabaseGenerated { get; set; }
-            public Sequence PrimaryKeySequence { get; set; }
-            public Type Type { get; }
-            public Table Table { get; }
-            public Dictionary<string, TableColumn> Columns { get; } = new Dictionary<string, TableColumn>();
-        }
-
-
         private readonly Dictionary<Type, TableMapping> _tableMappings = new Dictionary<Type, TableMapping>();
+        private readonly Dictionary<Type, TypeMapping> _typeMappings = new Dictionary<Type, TypeMapping>();
 
-        public readonly Schema Schema = new Schema();
+        public Schema Schema { get; } = new Schema();
 
-        public void Initialise()
+        public void Initialize()
         {
-            Schema.Initialise();
+            Schema.Initialize();
         }
 
-        public void AddTable(Type type, string tag = null)
+        private TypeMapping GetOrAddTypeMapping(Type type, int? size = null)
+        {
+            if (!_typeMappings.TryGetValue(type, out var typeMapping))
+            {
+                typeMapping = TypeMapping.From(type, size);
+                _typeMappings.Add(type, typeMapping);
+            }
+            return typeMapping;
+        }
+
+        private TypeMapping GetTypeMapping(Type type)
+        {
+            return _typeMappings[type];
+        }
+
+        public string ValueToSql<T>(T value)
+        {
+            return _typeMappings[typeof(T)].ValueToSql(value);
+        }
+
+        public void AddTable<T>(string tag = null) where T : class
         {
             if (string.IsNullOrEmpty(tag))
             {
                 tag = default;
             }
 
-            var table = new Table(type.Name) { Tag = tag };
-            var tableMapping = new TableMapping(type, table);
-            _tableMappings.Add(type, tableMapping);
+            var table = new Table(typeof(T).Name) { Tag = tag };
+            var tableMapping = new TableMapping(typeof(T), table);
+            _tableMappings.Add(typeof(T), tableMapping);
             Schema.Add(table);
 
-            foreach (var commentAttribute in type.GetCustomAttributes<CommentAttribute>(true))
+            foreach (var commentAttribute in typeof(T).GetCustomAttributes<CommentAttribute>(true))
             {
                 table.Comment += commentAttribute.Comment + "\n";
             }
 
             // TODO: GetMembers, not only the properties
-            var propertyInfos = type
+            var propertyInfos = typeof(T)
                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
                .ToList();
 
@@ -69,8 +75,11 @@ namespace ConsoleApp
             };
             foreach (var prop in propertyInfos)
             {
-                var datatype = Datatype.FromPropertyInfo(prop, out bool isForeignKey);
-                var column = new TableColumn(table, (isForeignKey ? "id_" : "") + prop.Name, datatype);
+                int? size = prop.GetCustomAttribute<MaxLengthAttribute>()?.Length;
+                var typeMapping = GetOrAddTypeMapping(prop.PropertyType, size);
+
+                bool isForeignKey = typeMapping.SqlType.IsReference;
+                var column = new TableColumn(table, (isForeignKey ? "id_" : "") + prop.Name, typeMapping.SqlType);
                 table.Columns.Add(column);
                 tableMapping.Columns.Add(prop.Name, column);
 
@@ -115,63 +124,17 @@ namespace ConsoleApp
                     .Select(prop => prop.Comment)
                     .ToDelimitedString("\n");
 
-                if (prop.PropertyType.IsEnum)
+                if (typeMapping is EnumTypeMapping enumTypeMapping)
                 {
-                    var enumValueNames = prop.PropertyType.GetFields()
-                        .Where(fi => fi.IsStatic)
-                        .OrderBy(fi => fi.Name)
-                        .Select(fi => fi.Name.Trim())
-                        .ToList();
-
-                    var enumSqlNames = enumValueNames
-                        .Select(name => SqlUtils.PascalCaseToSnakeCase(name))
-                        .Select(name =>
-                        {
-                            string[] nameParts = name.Split("_");
-                            if (nameParts.Length <= 1)
-                            {
-                                return nameParts[0].Substring(0, 4);
-                            }
-                            else if (nameParts.Length == 2)
-                            {
-                                return $"{nameParts[0].Substring(0, 2)}{nameParts[1].Substring(0, 2)}";
-                            }
-                            else if (nameParts.Length == 3)
-                            {
-                                return $"{nameParts[0].Substring(0, 2)}{nameParts[1].Substring(0, 1)}{nameParts[2].Substring(0, 1)}";
-                            }
-                            else
-                            {
-                                return $"{nameParts[0][0]}{nameParts[1][0]}{nameParts[2][0]}{nameParts[3][0]}";
-                            }
-                        })
-                        .ToList();
-
-                    for (int i = 0; i < enumSqlNames.Count; i++)
-                    {
-                        int nameLength = enumSqlNames[i].Length;
-                        int counter = 0;
-                        while (enumSqlNames.Take(i).Contains(enumSqlNames[i]))
-                        {
-                            string counterText = counter + "";
-                            enumSqlNames[i] = enumSqlNames[i].Substring(0, nameLength - counterText.Length) + counterText;
-                            counter++;
-                        }
-                    }
-
-                    var checkInValues = enumSqlNames
+                    var checkInValues = enumTypeMapping.EnumSqlNames
                         .Select(name => $"'{name}'")
                         .ToDelimitedString(", ");
 
-                    column.Comment += enumSqlNames
-                        .Select((sqlName, index) => $"{sqlName}: {enumValueNames[index]}")
-                        .ToDelimitedString("\n");
                     table.Constraints.Add(new CheckConstraint(table, $"ck_{table.SqlName}_{column.SqlName}", $"{column.SqlName} IN ({checkInValues})") { Tag = tag });
                 }
 
                 if (isForeignKey)
                 {
-                    //prop.PropertyType
                     Schema.OnInitialise += () =>
                     {
                         // Initialize the foreign key constraints
@@ -194,9 +157,9 @@ namespace ConsoleApp
 
         }
 
-        public InsertStatementGenerator<T> InsertsFor<T>(int count) where T : class
+        public InsertStatementGenerator<T> InsertsFor<T>(int count, string tag) where T : class
         {
-            return new InsertStatementGenerator<T>(this, count);
+            return new InsertStatementGenerator<T>(this, count, tag);
         }
 
         public string ToStringCreateOrReplace(string tag)
@@ -225,9 +188,9 @@ namespace ConsoleApp
 
         public class InsertStatementGenerator<T> : IReadOnlyList<int> where T : class
         {
-            private readonly CSharpToSqlMapper _mapper;
+            private readonly Mapper _mapper;
             private readonly TableMapping _tableMapping;
-            private readonly TableGeneratorInsert _insertStatements;
+            private readonly GeneratorInsertAction _insertStatements;
             private readonly IGenerator<int> _primaryKeyGenerator;
 
             public int Count => _insertStatements.InsertCount;
@@ -248,11 +211,15 @@ namespace ConsoleApp
                 }
             }
 
-            public InsertStatementGenerator(CSharpToSqlMapper mapper, int count)
+            public InsertStatementGenerator(Mapper mapper, int count, string tag)
             {
                 _mapper = mapper;
                 _tableMapping = _mapper._tableMappings[typeof(T)];
-                _insertStatements = new TableGeneratorInsert(_tableMapping.Table);
+                _insertStatements = new GeneratorInsertAction(_tableMapping.Table)
+                {
+                    Tag = tag,
+                    Schema = mapper.Schema
+                };
 
                 if (_tableMapping.DatabaseGenerated)
                 {
@@ -274,7 +241,8 @@ namespace ConsoleApp
             public InsertStatementGenerator<T> Set<TValue>(Expression<Func<T, TValue>> getExpression, IGenerator generator)
             {
                 string memberName = GetMemberName(getExpression);
-                _insertStatements.Generators.Add(_tableMapping.Columns[memberName], generator);
+                var typeMapping = _mapper.GetTypeMapping(typeof(TValue));
+                _insertStatements.Generators.Add(_tableMapping.Columns[memberName], new CSharpToSqlGenerator(generator, typeMapping));
                 return this;
             }
 

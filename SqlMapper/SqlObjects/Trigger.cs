@@ -13,12 +13,29 @@ namespace SqlMapper.SqlObjects
 
         public override string ToString()
         {
-            return ToStringCreateOrReplace();
+            return ToStringCreate(true);
         }
 
-        public string ToStringCreateOrReplace()
+        public override string ToStringCreate(bool replace)
         {
-            return $"CREATE OR REPLACE TRIGGER {SqlName}\n{SqlCode}\n/\n";
+            if (replace)
+            {
+                return $"CREATE OR REPLACE TRIGGER {SqlName}\n{SqlCode}\n/\n";
+            }
+            else
+            {
+                return $"CREATE TRIGGER {SqlName}\n{SqlCode}\n/\n";
+            }
+        }
+
+        public override string ToStringAlter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToStringDrop()
+        {
+            throw new NotImplementedException();
         }
     }
 }

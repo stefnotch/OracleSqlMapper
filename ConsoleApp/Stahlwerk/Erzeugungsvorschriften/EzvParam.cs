@@ -22,6 +22,7 @@ namespace ConsoleApp.Stahlwerk.Erzeugungsvorschriften
         [Comment("Physikalisch kleinstmoeglicher Wert")]
         public float MinWert { get; set; }
 
+        [Comment("Einheit des Wert. z.B. kg")]
         public string Einheit { get; set; }
 
         [Comment("Die Quelle der Messung. z.B. Automatisch Elektronisch, Externe Datenbank, Manuelle Eingabe")]
@@ -45,7 +46,7 @@ namespace ConsoleApp.Stahlwerk.Erzeugungsvorschriften
             Matrix
         }
 
-        public DatenTyp ParamDatenTyp { get; set; }
+        public DatenTyp? ParamDatenTyp { get; set; }
 
         public enum EzvParamTyp
         {

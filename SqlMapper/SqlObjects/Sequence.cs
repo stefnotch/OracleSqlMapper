@@ -15,17 +15,22 @@ namespace SqlMapper.SqlObjects
 
         public override string ToString()
         {
-            return ToStringDrop() + "\n" + ToStringCreate();
+            return ToStringCreate(true);
         }
 
-        public string ToStringDrop()
+        public override string ToStringDrop()
         {
             return $"DROP SEQUENCE {SqlName};";
         }
 
-        public string ToStringCreate()
+        public override string ToStringCreate(bool replace)
         {
-            string sqlCode = $"CREATE SEQUENCE {SqlName}";
+            string sqlCode = "";
+            if (replace)
+            {
+                sqlCode += ToStringDrop() + "\n";
+            }
+            sqlCode += $"CREATE SEQUENCE {SqlName}";
             if (StartWith.HasValue)
             {
                 sqlCode += $" START WITH {StartWith.Value}";
@@ -35,6 +40,11 @@ namespace SqlMapper.SqlObjects
                 sqlCode += $" INCREMENT BY {IncrementBy.Value}";
             }
             return $"{sqlCode};";
+        }
+
+        public override string ToStringAlter()
+        {
+            throw new NotImplementedException();
         }
     }
 }

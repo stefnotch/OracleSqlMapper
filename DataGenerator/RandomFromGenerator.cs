@@ -15,8 +15,16 @@ namespace DataGenerator
         public RandomFromGenerator(IGenerator<T>[] generators, int[] weights = null)
         {
             _generators = generators;
+            if (weights == null)
+            {
+                weights = new int[_generators.Length];
+                for (int i = 0; i < weights.Length; i++)
+                {
+                    weights[i] = 1;
+                }
+            }
             _weights = weights;
-            if (weights != null && _generators.Length != _weights.Length)
+            if (_generators.Length != _weights.Length)
             {
                 throw new Exception("Every generator needs a corresponding weight");
             }
@@ -27,6 +35,11 @@ namespace DataGenerator
             }
 
             _randomSeed = _seedRng.Next(int.MinValue, int.MaxValue);
+        }
+
+        public RandomFromGenerator<T> WithWeights(params int[] weights)
+        {
+            return new RandomFromGenerator<T>(_generators, weights);
         }
 
         public IEnumerator<T> GetEnumerator()

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace SqlMapper.SqlObjects
 {
-    public class TableInsert
+    public abstract class InsertAction : DatabaseAction
     {
-        public TableInsert(Table table)
+        public InsertAction(Table table)
         {
             Table = table;
         }

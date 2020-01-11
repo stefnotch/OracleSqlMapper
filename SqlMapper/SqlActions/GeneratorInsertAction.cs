@@ -6,9 +6,9 @@ using DataGenerator;
 
 namespace SqlMapper.SqlObjects
 {
-    public class TableGeneratorInsert : TableInsert
+    public class GeneratorInsertAction : InsertAction
     {
-        public TableGeneratorInsert(Table table) : base(table)
+        public GeneratorInsertAction(Table table) : base(table)
         {
         }
 
@@ -19,20 +19,19 @@ namespace SqlMapper.SqlObjects
             InsertCount = count;
         }
 
-        public string ToStringInsert()
+        public override string ToStringExecute()
         {
             string sqlColumnNames = Generators.Keys
                 .Select(col => col.SqlName)
                 .ToDelimitedString(", ");
 
             var valueEnumerators = Generators.Values
-                    .Select(gen => SqlUtils.GeneratorToEnumerable(gen).GetEnumerator())
+                    .Select(gen => gen.GetEnumerator())
                     .ToList();
 
             string insertSqlCode = $"INSERT INTO {Table.SqlName} ({sqlColumnNames}) VALUES ";
 
             // TODO: Optional PL/SQL Code generation
-
             string sqlCode = "";
             for (int i = 0; i < InsertCount; i++)
             {

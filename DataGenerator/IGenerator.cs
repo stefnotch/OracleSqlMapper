@@ -18,6 +18,7 @@ namespace DataGenerator
         }
     }
 
+    // TODO: Convert all generators to indexed generators. Having fully deterministic generators is cooler.
     public interface IIndexedGenerator<out T> : IGenerator<T>
     {
         T this[int index] { get; }
