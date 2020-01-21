@@ -5,7 +5,7 @@ using SqlMapper.Attributes;
 
 namespace ConsoleApp.Stahlwerk.Verkaufen
 {
-    [Comment("Mehrere Bestellungen werden geliefert")]
+    [Comment("Mehrere Bestellungen werden gruppiert und auf einmal geliefert")]
     public class Lieferung
     {
         [PrimaryKey]

@@ -13,6 +13,6 @@ namespace ConsoleApp.Stahlwerk.Verkaufen
         public int Id { get; set; }
         public Warenkorb Warenkorb { get; set; }
         public int Anzahl { get; set; }
-        public Produkt Produkt { get; set; }
+        public ProduktTyp ProduktTyp { get; set; }
     }
 }

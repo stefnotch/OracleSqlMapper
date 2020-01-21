@@ -4,7 +4,7 @@ using System.Text;
 using ConsoleApp.Stahlwerk.Erzeugungsvorschriften;
 using SqlMapper.Attributes;
 
-namespace ConsoleApp.Stahlwerk.Verkaufen
+namespace ConsoleApp.Stahlwerk
 {
     [Comment("Ein Parameter eines Produktes, wird fuer die Qualitaetsparameter des Produktes verwendent")]
     public class ProduktParam

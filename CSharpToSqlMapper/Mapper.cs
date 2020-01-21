@@ -41,11 +41,6 @@ namespace CSharpToSqlMapper
             return _typeMappings[type];
         }
 
-        public string ValueToSql<T>(T value)
-        {
-            return _typeMappings[typeof(T)].ValueToSql(value);
-        }
-
         public void AddTable<T>(string tag = null) where T : class
         {
             if (string.IsNullOrEmpty(tag))

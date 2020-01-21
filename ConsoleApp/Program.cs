@@ -32,6 +32,9 @@ namespace ConsoleApp
             var mapper = new Mapper();
             mapper.Schema.Name = "if150185";
             mapper.AddTable<Charge>(StahlwerkTag);
+            mapper.AddTable<Produkt>(StahlwerkTag);
+            mapper.AddTable<ProduktParam>(StahlwerkTag);
+            mapper.AddTable<ProduktSegmentParam>(StahlwerkTag);
 
             mapper.AddTable<EzvGruppe>(EzvTag);
             mapper.AddTable<Ezv>(EzvTag);
@@ -50,12 +53,11 @@ namespace ConsoleApp
             mapper.AddTable<ChargeToKokilleMap>(AnlagenTag);
             mapper.AddTable<ChargeToStrangMap>(AnlagenTag);
 
-            mapper.AddTable<Produkt>(VerkaufenTag);
-            mapper.AddTable<ProduktParam>(VerkaufenTag);
-            mapper.AddTable<ProduktSegmentParam>(VerkaufenTag);
             mapper.AddTable<Warenkorb>(VerkaufenTag);
+            mapper.AddTable<ProduktTyp>(VerkaufenTag);
             mapper.AddTable<WarenkorbEintrag>(VerkaufenTag);
             mapper.AddTable<Bestellung>(VerkaufenTag);
+            mapper.AddTable<BestellungToProdukteMap>(VerkaufenTag);
             mapper.AddTable<Lieferung>(VerkaufenTag);
             mapper.AddTable<Lieferdienst>(VerkaufenTag);
 
@@ -291,7 +293,8 @@ namespace ConsoleApp
                     .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
             }
 
-            var produktNameGenerator = RandomFrom(Join(
+            var produktTypen = mapper.InsertsFor<ProduktTyp>(40, AnlagenTag)
+                .Set(e => e.Name, RandomFrom(Join(
                                                     RandomFrom("BMW", "Audi", "Opel", "Mercedes", "Volvo", "Ford"),
                                                     Value(" "),
                                                     RandomFrom("Motorhaube", "Stahlrahmen", "Traeger", "Blech")),
@@ -299,28 +302,33 @@ namespace ConsoleApp
                                                     RandomFrom("Dosen", "Schiffs", "Flugzeugs", "Waschmaschinen"),
                                                     Value(" "),
                                                     RandomFrom("Blech", "Stahlplatte", "Billigblech", "Blech"))
-                                                );
+                                                ))
+                .Set(e => e.GeplanteLaenge, Random(10, 50));
 
-            var produkte = mapper.InsertsFor<Produkt>(chargen.Count * 4, VerkaufenTag)
-                .Set(e => e.Charge, SequentialFrom(chargen))
-                .Set(e => e.Name, produktNameGenerator)
-                .Set(e => e.GeplanteLaenge, Random(10, 50))
+            var produkte = mapper.InsertsFor<Produkt>(chargen.Count * 4, AnlagenTag)
+                .Set(e => e.Charge, RepeatEach(SequentialFrom(chargen), 4))
+                .Set(e => e.IndexInCharge, SequentialFrom(new int[] { 1, 2, 3, 4 }))
+                // TODO: Name as virtual column? Or view?
+                // TODO: Virtual column support (getter only properties)
+                .Set(e => e.ProduktTyp, RandomFrom(produktTypen))
                 .Set(e => e.LaengeAbweichung, Random(-2.0, 2.0));
 
-            var fertigeProdukte = mapper.InsertsFor<Produkt>(fertigeChargen.Count * 4, VerkaufenTag)
-                .Set(e => e.Charge, SequentialFrom(fertigeChargen))
-                .Set(e => e.Name, produktNameGenerator)
-                .Set(e => e.GeplanteLaenge, Random(10, 50))
+            var fertigeProdukte = mapper.InsertsFor<Produkt>(fertigeChargen.Count * 4, AnlagenTag)
+                .Set(e => e.Charge, RepeatEach(SequentialFrom(fertigeChargen), 4))
+                .Set(e => e.IndexInCharge, SequentialFrom(new int[] { 1, 2, 3, 4 }))
+                // TODO: Name as virtual column? Or view?
+                // TODO: Virtual column support (getter only properties)
+                .Set(e => e.ProduktTyp, RandomFrom(produktTypen))
                 .Set(e => e.LaengeAbweichung, Random(-4.0, 4.0))
                 .Set(e => e.ProduktionsZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now));
 
             {
-                var produktParams = mapper.InsertsFor<ProduktParam>(fertigeProdukte.Count * ezvQualitaetsParams.Count, VerkaufenTag)
+                var produktParams = mapper.InsertsFor<ProduktParam>(fertigeProdukte.Count * ezvQualitaetsParams.Count, AnlagenTag)
                     .Set(e => e.Produkt, SequentialFrom(RepeatEach(SequentialFrom(fertigeProdukte), ezvQualitaetsParams.Count)))
                     .Set(e => e.EzvParam, SequentialFrom(ezvQualitaetsParams))
                     .Set(e => e.Wert, RandomFrom(Value(5), Random(1, 5)).WithWeights(2, 1)); // TODO: This should be a calculated value
 
-                var produktSegmentParams = mapper.InsertsFor<ProduktSegmentParam>(produktParams.Count * segmentAnzahl, VerkaufenTag)
+                var produktSegmentParams = mapper.InsertsFor<ProduktSegmentParam>(produktParams.Count * segmentAnzahl, AnlagenTag)
                     .Set(e => e.Segment, Count(1))
                     .Set(e => e.ProduktParam, SequentialFrom(RepeatEach(SequentialFrom(produktParams), segmentAnzahl)))
                     .Set(e => e.Wert, RandomFrom(Value(5), Random(1, 5)).WithWeights(2, 1));
@@ -337,7 +345,7 @@ namespace ConsoleApp
                     .Set(e => e.Anzahl, Random(1, 100))
                     // TODO: Rethink the produkt stuff. A produkt should probably only be a product-definition.
                     // And then there should be a product-instance.
-                    .Set(e => e.Produkt, RandomFrom(RandomFrom(produkte), RandomFrom(fertigeProdukte)));
+                    .Set(e => e.ProduktTyp, RandomFrom(produktTypen));
 
                 var lieferdienste = mapper.InsertsFor<Lieferdienst>(5, VerkaufenTag)
                     .Set(e => e.Name, SequentialFrom("DHL", "Amazon Drone", "UPS", "Post", "Yodel"));
@@ -350,9 +358,11 @@ namespace ConsoleApp
 
                 var bestellungen = mapper.InsertsFor<Bestellung>(lieferungen.Count, VerkaufenTag)
                     .Set(e => e.Warenkorb, RandomFrom(warenkoerbe))
-                    .Set(e => e.Anzahl, Random(1, 100))
-                    .Set(e => e.Produkt, RandomFrom(fertigeProdukte))
                     .Set(e => e.Lieferung, SequentialFrom(lieferungen));
+
+                var bestellungProdukteMap = mapper.InsertsFor<BestellungToProdukteMap>(lieferungen.Count * 10, VerkaufenTag)
+                    .Set(e => e.Bestellung, SequentialFrom(bestellungen))
+                    .Set(e => e.Produkt, RandomFrom(SequentialFrom(produkte), SequentialFrom(fertigeProdukte))); // TODO: More Randomness
             }
         }
 

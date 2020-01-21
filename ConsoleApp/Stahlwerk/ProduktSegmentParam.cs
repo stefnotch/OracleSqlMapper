@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using SqlMapper.Attributes;
 
-namespace ConsoleApp.Stahlwerk.Verkaufen
+namespace ConsoleApp.Stahlwerk
 {
     [Comment("Ein Parameter fuer ein Segment des Produktes. z.B. Ein Blech hat mehrere Segmente mit verschiedenen Qualitaeten")]
     public class ProduktSegmentParam
