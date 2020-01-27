@@ -14,7 +14,7 @@ namespace ConsoleApp.Stahlwerk
         [Comment("Index von diesem Segment")]
         public int Segment { get; set; }
 
-        public Produkt ProduktParam { get; set; }
+        public ProduktParam ProduktParam { get; set; }
 
         public int Wert { get; set; }
     }
