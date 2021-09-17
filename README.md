@@ -3,6 +3,11 @@ A little C# to Oracle (PL)SQL Mapper
 
 # Unique, pseudo-random numbers
 
+Called "pseudorandom permutation"
+
+> One use-case I had that I would first generate some arbitrary table entries. (sequential IDs) And then, another table that would reference each of those entries exactly once depending on the relationship. (pseudorandom permutation for the foreign keys)
+
+
 Boils down to 1:1 remapping functions. **A PRNG with this property is called "full cycle" or "full period". For example, "full period xorshift"
 
 e.g. `[00,01,10,11]` can be shifted by -1 to `[01,10,11,00]` . Or the number pairs can be swapped `[01,00,11,10]` Or, since it's a power of two, the bits can be flipped `[11,10,01,00]`. Or the range can be reversed `[11,10,01,00]`
