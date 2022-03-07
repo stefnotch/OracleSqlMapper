@@ -1,6 +1,8 @@
 # OracleSqlMapper
 A little C# to Oracle (PL)SQL Mapper
 
+[Synthetic data generation could be done with this](https://github.com/sdv-dev/SDGym)
+
 # Unique, pseudo-random numbers
 
 Called "pseudorandom permutation"
