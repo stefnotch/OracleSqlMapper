@@ -8,6 +8,7 @@ A little C# to Oracle (PL)SQL Mapper
 Called "pseudorandom permutation"
 
 > One use-case I had that I would first generate some arbitrary table entries. (sequential IDs) And then, another table that would reference each of those entries exactly once depending on the relationship. (pseudorandom permutation for the foreign keys)
+> Another use case is unique "name-middlename-lastname" combinations. Imagine having 1000 each, then that'd be 1000^3 = a lot of different combinations. Just picking the first N and shuffling them would be quite booooring, so we better be fancy.
 
 
 Boils down to 1:1 remapping functions. **A PRNG with this property is called "full cycle" or "full period". For example, "full period xorshift"
