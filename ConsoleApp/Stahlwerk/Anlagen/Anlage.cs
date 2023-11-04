@@ -24,5 +24,13 @@ namespace ConsoleApp.Stahlwerk.Anlagen
 
         [Comment("Gewicht der Anlage in Tonnen")]
         public float Gewicht { get; set; }
+
+        public enum Anlagen
+        {
+            Pfanne,
+            Verteiler,
+            Kokille,
+            Strang
+        }
     }
 }

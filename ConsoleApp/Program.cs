@@ -256,7 +256,7 @@ namespace ConsoleApp
                 .Set(e => e.Breite, Random(90, 120))
                 .Set(e => e.Hoehe, Random(15, 30));
 
-            var chargen = mapper.InsertsFor<Charge>(4 * anlagenAnzahl * chargenProAnlage, AnlagenTag)
+            var chargen = mapper.InsertsFor<Charge>(anlagenAnzahl * chargenProAnlage * 4, AnlagenTag)
                 .Set(e => e.Name, Join(Value("Charge "), Count()))
                 .Set(e => e.PlanGewicht, Random(70, 140))
                 .Set(e => e.GewichtAbweichung, RandomFrom(Value(0), Random(-15, 15)).WithWeights(3, 1))
@@ -272,25 +272,25 @@ namespace ConsoleApp
 
             {
                 var chargenSequence = SequentialFrom(chargen);
-                var chargenToPfanneMap = mapper.InsertsFor<ChargeToPfanneMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
+                var chargenToPfanneMap = mapper.InsertsFor<ChargeToPfanneMap>(anlagenAnzahl * chargenProAnlage * 4, AnlagenTag)
                     .Set(e => e.Charge, chargenSequence)
                     .Set(e => e.Anlage, SequentialFrom(pfannen))
-                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-5), DateTime.Now.AddDays(-4)));
 
-                var chargenToVerteilerMap = mapper.InsertsFor<ChargeToVerteilerMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
+                var chargenToVerteilerMap = mapper.InsertsFor<ChargeToVerteilerMap>(anlagenAnzahl * chargenProAnlage * 3, AnlagenTag)
                     .Set(e => e.Charge, chargenSequence)
                     .Set(e => e.Anlage, SequentialFrom(verteiler))
-                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-4), DateTime.Now.AddDays(-3)));
+
+                var chargenToKokilleMap = mapper.InsertsFor<ChargeToKokilleMap>(anlagenAnzahl * chargenProAnlage * 2, AnlagenTag)
+                    .Set(e => e.Charge, chargenSequence)
+                    .Set(e => e.Anlage, SequentialFrom(kokillen))
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-3), DateTime.Now.AddDays(-2)));
 
                 var chargenToStrangMap = mapper.InsertsFor<ChargeToStrangMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
                     .Set(e => e.Charge, chargenSequence)
                     .Set(e => e.Anlage, SequentialFrom(straenge))
-                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
-
-                var chargenToKokilleMap = mapper.InsertsFor<ChargeToKokilleMap>(anlagenAnzahl * chargenProAnlage, AnlagenTag)
-                    .Set(e => e.Charge, chargenSequence)
-                    .Set(e => e.Anlage, SequentialFrom(kokillen))
-                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now.AddDays(1)));
+                    .Set(e => e.StartZeit, Random(DateTime.Now.AddDays(-2), DateTime.Now.AddDays(-1)));
             }
 
             var produktTypen = mapper.InsertsFor<ProduktTyp>(40, AnlagenTag)
@@ -303,7 +303,8 @@ namespace ConsoleApp
                                                     Value(" "),
                                                     RandomFrom("Blech", "Stahlplatte", "Billigblech", "Blech"))
                                                 ))
-                .Set(e => e.GeplanteLaenge, Random(10, 50));
+                .Set(e => e.GeplanteLaenge, Random(10, 50))
+                .Set(e => e.Preis, Random(100, 1000));
 
             var produkte = mapper.InsertsFor<Produkt>(chargen.Count * 4, AnlagenTag)
                 .Set(e => e.Charge, RepeatEach(SequentialFrom(chargen), 4))
@@ -320,7 +321,7 @@ namespace ConsoleApp
                 // TODO: Virtual column support (getter only properties)
                 .Set(e => e.ProduktTyp, RandomFrom(produktTypen))
                 .Set(e => e.LaengeAbweichung, Random(-4.0, 4.0))
-                .Set(e => e.ProduktionsZeit, Random(DateTime.Now.AddDays(-1), DateTime.Now));
+                .Set(e => e.ProduktionsZeit, Random(DateTime.Now, DateTime.Now.AddDays(4)));
 
             {
                 var produktParams = mapper.InsertsFor<ProduktParam>(fertigeProdukte.Count * ezvQualitaetsParams.Count, AnlagenTag)
@@ -358,7 +359,8 @@ namespace ConsoleApp
 
                 var bestellungen = mapper.InsertsFor<Bestellung>(lieferungen.Count, VerkaufenTag)
                     .Set(e => e.Warenkorb, RandomFrom(warenkoerbe))
-                    .Set(e => e.Lieferung, SequentialFrom(lieferungen));
+                    .Set(e => e.Lieferung, SequentialFrom(lieferungen))
+                    .Set(e => e.BestellZeit, RepeatEach(Random(DateTime.Now.AddDays(-30), DateTime.Now.AddDays(-7)), 4));
 
                 var bestellungProdukteMap = mapper.InsertsFor<BestellungToProdukteMap>(lieferungen.Count * 10, VerkaufenTag)
                     .Set(e => e.Bestellung, SequentialFrom(bestellungen))

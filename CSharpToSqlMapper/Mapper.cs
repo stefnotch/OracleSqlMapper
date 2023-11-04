@@ -48,29 +48,54 @@ namespace CSharpToSqlMapper
                 tag = default;
             }
 
+
+
+            // Create a table with our Name: typeof(T).Name
             var table = new Table(typeof(T).Name) { Tag = tag };
+
+
+
+
             var tableMapping = new TableMapping(typeof(T), table);
             _tableMappings.Add(typeof(T), tableMapping);
             Schema.Add(table);
-
             foreach (var commentAttribute in typeof(T).GetCustomAttributes<CommentAttribute>(true))
             {
                 table.Comment += commentAttribute.Comment + "\n";
             }
 
+
+
+
+            // Get all properties --> Table Columns
             // TODO: GetMembers, not only the properties
             var propertyInfos = typeof(T)
                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
                .ToList();
+
+
+
+
 
             var primaryKey = new PrimaryKeyConstraint(table, "pk_" + table.SqlName, Enumerable.Empty<TableColumn>())
             {
                 Tag = tag,
                 IsInline = true
             };
+
+
+
+
             foreach (var prop in propertyInfos)
             {
+                // Reading attributes from our properties
                 int? size = prop.GetCustomAttribute<MaxLengthAttribute>()?.Length;
+
+
+
+                // Etc.
+
+
                 var typeMapping = GetOrAddTypeMapping(prop.PropertyType, size);
 
                 bool isForeignKey = typeMapping.SqlType.IsReference;

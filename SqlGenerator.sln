@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29326.143
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SqlMapper", "SqlMapper\SqlMapper.csproj", "{CAB3ABE8-DC84-4AA0-B33C-2FA3824D7A9C}"
 EndProject
@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "ConsoleApp\Co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataGenerator", "DataGenerator\DataGenerator.csproj", "{6F364E31-C2BC-44CB-A6A8-EA683A39C32B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpToSqlMapper", "CSharpToSqlMapper\CSharpToSqlMapper.csproj", "{71C70B7F-0915-43A4-AB0C-62C636570344}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpToSqlMapper", "CSharpToSqlMapper\CSharpToSqlMapper.csproj", "{71C70B7F-0915-43A4-AB0C-62C636570344}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp.Friendships", "ConsoleApp.Friendships\ConsoleApp.Friendships.csproj", "{99A1E241-D42B-46D6-940F-13F9588E4E01}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{71C70B7F-0915-43A4-AB0C-62C636570344}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71C70B7F-0915-43A4-AB0C-62C636570344}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71C70B7F-0915-43A4-AB0C-62C636570344}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99A1E241-D42B-46D6-940F-13F9588E4E01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99A1E241-D42B-46D6-940F-13F9588E4E01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99A1E241-D42B-46D6-940F-13F9588E4E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99A1E241-D42B-46D6-940F-13F9588E4E01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,5 +12,6 @@ namespace ConsoleApp.Stahlwerk.Verkaufen
         public int Id { get; set; }
         public Warenkorb Warenkorb { get; set; }
         public Lieferung Lieferung { get; set; }
+        public DateTime BestellZeit { get; set; }
     }
 }
